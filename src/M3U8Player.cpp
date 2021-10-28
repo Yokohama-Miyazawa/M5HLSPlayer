@@ -1,6 +1,5 @@
 #include "M3U8Player.h"
 
-
 M3U8Player::M3U8Player(String url)
 {
   scrapeAACHandle = NULL;

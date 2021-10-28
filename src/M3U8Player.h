@@ -8,8 +8,7 @@
 
 class M3U8Player {
 public:
-  M3U8Player();
-  M3U8Player(char *url);
+  M3U8Player(String url);
   ~M3U8Player();
   String stationUrl;
   float volume;
