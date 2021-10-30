@@ -9,10 +9,12 @@
 class M3U8Player {
 public:
   M3U8Player(String url);
+  M3U8Player(String url, const float &startVolume);
   ~M3U8Player();
   String stationUrl;
   float volume;
   void playAAC();
+  void setVolume(const float &newVolume);
 private:
   TaskHandle_t scrapeAACHandle;
   TaskHandle_t setBufferHandle;

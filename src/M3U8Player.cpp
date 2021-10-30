@@ -23,6 +23,29 @@ M3U8Player::M3U8Player(String url)
   xTaskCreatePinnedToCore(this->setBuffer, "setBuffer", 2048 * 1, this, 1, &setBufferHandle, 0);
 }
 
+M3U8Player::M3U8Player(String url, const float &startVolume)
+{
+  scrapeAACHandle = NULL;
+  setBufferHandle = NULL;
+  volume = startVolume;
+  buffSize = 4096;
+  targetDuration = 10;
+  isChannelChanged = false;
+  needNextBuff = false;
+  stationUrl = url;
+  m3u8Urls.push(stationUrl);
+
+  out = new AudioOutputI2S(0, 1);
+  out->SetOutputModeMono(true);
+  out->SetGain(volume / 100.0);
+  aac = new AudioGeneratorAAC();
+
+  delay(1000);
+  scrapeM3U8();
+  xTaskCreatePinnedToCore(this->scrapeAAC, "scrapeAAC", 2048 * 3, this, 0, &scrapeAACHandle, 0);
+  xTaskCreatePinnedToCore(this->setBuffer, "setBuffer", 2048 * 1, this, 1, &setBufferHandle, 0);
+}
+
 M3U8Player::~M3U8Player(){
   vTaskDelete(scrapeAACHandle);
   vTaskDelete(setBufferHandle);
@@ -131,4 +154,12 @@ void M3U8Player::playAAC()
       }
     }
   }
+}
+
+void M3U8Player::setVolume(const float &newVolume)
+{
+  volume = newVolume;
+  out->SetGain(volume / 100.0);
+  Serial.printf("VOLUME: %f\n", volume);
+  return;
 }
