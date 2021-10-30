@@ -108,7 +108,6 @@ void M3U8Player::playAAC()
     if (!aac->begin(buff, out))
     {
       Serial.println("Player start failed.");
-      M5.Lcd.println("Player start failed.");
       return;
     }
     while (aac->isRunning())

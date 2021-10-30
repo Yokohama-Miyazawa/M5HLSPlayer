@@ -1,4 +1,4 @@
-#include <M5Stack.h>
+#include <Arduino.h>
 #include <HTTPClient.h>
 #include "AudioFileSourceHTTPStream.h"
 #include "AudioGeneratorAAC.h"
