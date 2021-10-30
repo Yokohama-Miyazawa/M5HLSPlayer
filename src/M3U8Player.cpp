@@ -160,6 +160,5 @@ void M3U8Player::setVolume(const float &newVolume)
 {
   volume = newVolume;
   out->SetGain(volume / 100.0);
-  Serial.printf("VOLUME: %f\n", volume);
   return;
 }
