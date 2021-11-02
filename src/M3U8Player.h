@@ -13,11 +13,13 @@ public:
   ~M3U8Player();
   String stationUrl;
   float volume;
-  void playAAC();
+  bool start();
   void setVolume(const float &newVolume);
+  float getVolume();
 private:
   TaskHandle_t scrapeAACHandle;
   TaskHandle_t setBufferHandle;
+  TaskHandle_t playAACHandle;
   AudioGeneratorAAC *aac;
   AudioFileSourceBuffer *buff;
   AudioFileSourceBuffer *nextBuff;
@@ -28,7 +30,9 @@ private:
   StringStack m3u8Urls;
   bool isChannelChanged;
   bool needNextBuff;
+  bool isPlaying;
   void scrapeM3U8();
   static void scrapeAAC(void *args);
   static void setBuffer(void *args);
+  static void playAAC(void *args);
 };

@@ -4,11 +4,13 @@ M3U8Player::M3U8Player(String url)
 {
   scrapeAACHandle = NULL;
   setBufferHandle = NULL;
+  playAACHandle = NULL;
   volume = 5.0;
   buffSize = 4096;
   targetDuration = 10;
   isChannelChanged = false;
   needNextBuff = false;
+  isPlaying = false;
   stationUrl = url;
   m3u8Urls.push(stationUrl);
 
@@ -21,17 +23,20 @@ M3U8Player::M3U8Player(String url)
   scrapeM3U8();
   xTaskCreatePinnedToCore(this->scrapeAAC, "scrapeAAC", 2048 * 3, this, 0, &scrapeAACHandle, 0);
   xTaskCreatePinnedToCore(this->setBuffer, "setBuffer", 2048 * 1, this, 1, &setBufferHandle, 0);
+  xTaskCreatePinnedToCore(this->playAAC,   "playAAC",   2048 * 1, this, 2, &playAACHandle,   1);
 }
 
 M3U8Player::M3U8Player(String url, const float &startVolume)
 {
   scrapeAACHandle = NULL;
   setBufferHandle = NULL;
+  playAACHandle = NULL;
   volume = startVolume;
   buffSize = 4096;
   targetDuration = 10;
   isChannelChanged = false;
   needNextBuff = false;
+  isPlaying = false;
   stationUrl = url;
   m3u8Urls.push(stationUrl);
 
@@ -44,11 +49,13 @@ M3U8Player::M3U8Player(String url, const float &startVolume)
   scrapeM3U8();
   xTaskCreatePinnedToCore(this->scrapeAAC, "scrapeAAC", 2048 * 3, this, 0, &scrapeAACHandle, 0);
   xTaskCreatePinnedToCore(this->setBuffer, "setBuffer", 2048 * 1, this, 1, &setBufferHandle, 0);
+  xTaskCreatePinnedToCore(this->playAAC,   "playAAC",   2048 * 1, this, 2, &playAACHandle,   1);
 }
 
 M3U8Player::~M3U8Player(){
   vTaskDelete(scrapeAACHandle);
   vTaskDelete(setBufferHandle);
+  vTaskDelete(playAACHandle);
   delete out;
   delete aac;
   log_d("M3U8Player destructed.");
@@ -114,46 +121,63 @@ void M3U8Player::setBuffer(void *m3u8PlayerInstance)
   }
 }
 
-void M3U8Player::playAAC()
+void M3U8Player::playAAC(void *m3u8PlayerInstance)
 {
+  M3U8Player *instance = (M3U8Player *)m3u8PlayerInstance;
   bool isNextBuffPrepared = false;
-  needNextBuff = true;
-  while (aacUrls.length() == 0)
+  instance->needNextBuff = true;
+  while (!instance->isPlaying)
+  {
+    Serial.println("have not started yet...");
+    delay(1000);
+  }
+  while (instance->aacUrls.length() == 0)
   {
     Serial.println(".aac queue is empty.");
     delay(1000);
   }
-  while (!nextBuff){ delay(100); }
-  buff = nextBuff;
+  while (!instance->nextBuff){ delay(100); }
+  instance->buff = instance->nextBuff;
 
   while (true)
   {
-    if (!aac->begin(buff, out))
+    if (!instance->aac->begin(instance->buff, instance->out))
     {
       Serial.println("Player start failed.");
-      return;
+      delay(1000);
     }
-    while (aac->isRunning())
+    while (instance->aac->isRunning())
     {
-      if (!isNextBuffPrepared && buff->getSize() < 3 * buff->getPos())
+      if (!isNextBuffPrepared && instance->buff->getSize() < 3 * instance->buff->getPos())
       {
         isNextBuffPrepared = true;
-        log_i("urls: %d", aacUrls.length());
-        if (aacUrls.length() == 0){ continue; }
+        log_i("urls: %d", instance->aacUrls.length());
+        if (instance->aacUrls.length() == 0){ continue; }
         log_i("prepare next buffer");
-        needNextBuff = true;
+        instance->needNextBuff = true;
       }
-      if (!aac->loop())
+      if (!instance->aac->loop())
       {
-        aac->stop();
-        buff->close();
-        delete buff;
-        buff = nextBuff;
-        nextBuff = NULL;
+        instance->aac->stop();
+        instance->buff->close();
+        delete instance->buff;
+        instance->buff = instance->nextBuff;
+        instance->nextBuff = NULL;
         isNextBuffPrepared = false;
       }
     }
   }
+}
+
+bool M3U8Player::start()
+{
+  if(isPlaying) {
+    Serial.println("Already Started.");
+    return false;
+  }
+  isPlaying = true;
+  Serial.println("Player Start.");
+  return true;
 }
 
 void M3U8Player::setVolume(const float &newVolume)
@@ -161,4 +185,9 @@ void M3U8Player::setVolume(const float &newVolume)
   volume = newVolume;
   out->SetGain(volume / 100.0);
   return;
+}
+
+float M3U8Player::getVolume()
+{
+  return volume;
 }
