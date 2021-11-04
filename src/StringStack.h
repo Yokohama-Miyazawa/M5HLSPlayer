@@ -14,5 +14,5 @@ public:
     bool search(const String &element);
 private:
     int top;
-    String data[size];
+    String *data;
 };

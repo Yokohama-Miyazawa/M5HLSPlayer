@@ -3,6 +3,7 @@
 
 StringStack::StringStack(){
     top = -1;
+    data = new String[size];
 }
 
 StringStack::~StringStack() {

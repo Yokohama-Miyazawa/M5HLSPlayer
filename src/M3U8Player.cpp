@@ -124,18 +124,10 @@ void M3U8Player::setBuffer(void *m3u8PlayerInstance)
 void M3U8Player::playAAC(void *m3u8PlayerInstance)
 {
   M3U8Player *instance = (M3U8Player *)m3u8PlayerInstance;
+  restart:
   bool isNextBuffPrepared = false;
   instance->needNextBuff = true;
-  while (!instance->isPlaying)
-  {
-    Serial.println("have not started yet...");
-    delay(1000);
-  }
-  while (instance->aacUrls.length() == 0)
-  {
-    Serial.println(".aac queue is empty.");
-    delay(1000);
-  }
+  while (!instance->isPlaying || instance->aacUrls.length() == 0){ delay(1000); }
   while (!instance->nextBuff){ delay(100); }
   instance->buff = instance->nextBuff;
 
@@ -144,7 +136,10 @@ void M3U8Player::playAAC(void *m3u8PlayerInstance)
     if (!instance->aac->begin(instance->buff, instance->out))
     {
       Serial.println("Player start failed.");
-      delay(1000);
+      instance->buff->close();
+      delete instance->buff;
+      instance->nextBuff = NULL;
+      goto restart;
     }
     while (instance->aac->isRunning())
     {

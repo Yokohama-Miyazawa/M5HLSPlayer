@@ -14,5 +14,5 @@ public:
 private:
     int head;
     int tail;
-    String data[size];
+    String *data;
 };

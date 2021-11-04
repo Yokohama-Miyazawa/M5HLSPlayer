@@ -4,6 +4,7 @@
 StringQueue::StringQueue(){
     head = 0;
     tail = capacity;
+    data = new String[size];
 }
 
 StringQueue::~StringQueue() {
