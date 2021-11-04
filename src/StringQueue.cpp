@@ -49,3 +49,8 @@ bool StringQueue::search(const String &element) {
         i = (i + 1) % size;
     }
 }
+
+void StringQueue::clear() {
+    head = 0;
+    tail = capacity;
+}

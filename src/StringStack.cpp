@@ -45,3 +45,7 @@ bool StringStack::search(const String &element) {
     }
     return false;
 }
+
+void StringStack::clear() {
+    top = -1;
+}

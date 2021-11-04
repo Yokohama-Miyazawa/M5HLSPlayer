@@ -12,6 +12,7 @@ public:
     String peek();
     int depth();
     bool search(const String &element);
+    void clear();
 private:
     int top;
     String *data;

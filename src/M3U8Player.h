@@ -16,6 +16,7 @@ public:
   bool start();
   void setVolume(const float &newVolume);
   float getVolume();
+  bool changeURL(const String &url);
 private:
   TaskHandle_t scrapeAACHandle;
   TaskHandle_t setBufferHandle;

@@ -72,6 +72,7 @@ void M3U8Player::scrapeM3U8()
     log_v("status: %d", status);
     delay(100);
   } while (status != 1);
+  isChannelChanged = false;
   return;
 }
 
@@ -185,4 +186,20 @@ void M3U8Player::setVolume(const float &newVolume)
 float M3U8Player::getVolume()
 {
   return volume;
+}
+
+bool M3U8Player::changeURL(const String &url)
+{
+  if(url.indexOf("http") != 0)
+  {
+    log_i("invalid url");
+    return false;
+  }
+  m3u8Urls.clear();
+  m3u8Urls.push(url);
+  isChannelChanged = true;
+  String oldestAACUrl = aacUrls.pop();
+  aacUrls.clear();
+  aacUrls.push(oldestAACUrl);
+  return true;
 }
