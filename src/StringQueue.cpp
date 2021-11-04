@@ -4,6 +4,7 @@
 StringQueue::StringQueue(){
     head = 0;
     tail = capacity;
+    data = new String[size];
 }
 
 StringQueue::~StringQueue() {
@@ -47,4 +48,9 @@ bool StringQueue::search(const String &element) {
         if(i == tail) return false;
         i = (i + 1) % size;
     }
+}
+
+void StringQueue::clear() {
+    head = 0;
+    tail = capacity;
 }

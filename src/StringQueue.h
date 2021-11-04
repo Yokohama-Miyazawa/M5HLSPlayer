@@ -11,8 +11,9 @@ public:
     String pop();
     int length();
     bool search(const String &element);
+    void clear();
 private:
     int head;
     int tail;
-    String data[size];
+    String *data;
 };

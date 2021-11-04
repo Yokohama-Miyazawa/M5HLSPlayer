@@ -1,6 +1,6 @@
 #include <M5StickC.h>
 #include <WiFi.h>
-#include "M3U8Player.h"
+#include <M3U8Player.h>
 #include <SD.h>
 
 // Write your SSID and Password here
@@ -8,6 +8,7 @@
 #define PASSWD "********"
 
 M3U8Player *player;
+bool isMuted = false;
 
 void print(const char *text) {
   M5.Lcd.fillScreen(BLACK);
@@ -32,13 +33,17 @@ void setup() {
   delay(3000);
   print("setup completed");
   log_i("setup completed");
+  player->start();
+  print("now playing");
 }
 
 void loop() {
   M5.update();
-  if (M5.BtnA.isPressed()){
-    print("now playing");
-    player->playAAC();
+  if (M5.BtnB.isPressed()){
+    float nextVolume = isMuted ? 100.0 : 0.0;
+    player->setVolume(nextVolume);
+    isMuted = !isMuted;
+    delay(100);
   }
   delay(10);
 }

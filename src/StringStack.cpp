@@ -3,6 +3,7 @@
 
 StringStack::StringStack(){
     top = -1;
+    data = new String[size];
 }
 
 StringStack::~StringStack() {
@@ -43,4 +44,8 @@ bool StringStack::search(const String &element) {
         if(data[i] == element) return true;
     }
     return false;
+}
+
+void StringStack::clear() {
+    top = -1;
 }
