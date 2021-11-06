@@ -12,6 +12,7 @@ public:
     int length();
     bool search(const String &element);
     void clear();
+    void tearOff(const int &leftNumber);
 private:
     int head;
     int tail;

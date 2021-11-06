@@ -54,3 +54,9 @@ void StringQueue::clear() {
     head = 0;
     tail = capacity;
 }
+
+// left numbers of elements from head, others are tear-off
+void StringQueue::tearOff(const int &leftNumber) {
+    if(leftNumber <= 0) { return; }
+    tail = (head + leftNumber - 1) % size;
+}

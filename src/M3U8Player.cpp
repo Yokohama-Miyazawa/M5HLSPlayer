@@ -188,7 +188,7 @@ float M3U8Player::getVolume()
   return volume;
 }
 
-bool M3U8Player::changeURL(const String &url)
+bool M3U8Player::changeStationURL(const String &url)
 {
   if(url.indexOf("http") != 0)
   {
@@ -198,8 +198,12 @@ bool M3U8Player::changeURL(const String &url)
   m3u8Urls.clear();
   m3u8Urls.push(url);
   isChannelChanged = true;
-  String oldestAACUrl = aacUrls.pop();
-  aacUrls.clear();
-  aacUrls.push(oldestAACUrl);
+  uint8_t leftNum = 2;
+  if(aacUrls.length() >= leftNum){ aacUrls.tearOff(leftNum); }
   return true;
+}
+
+String M3U8Player::getStationURL()
+{
+  return stationUrl;
 }
