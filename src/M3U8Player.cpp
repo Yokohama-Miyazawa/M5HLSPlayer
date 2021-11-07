@@ -198,7 +198,7 @@ bool M3U8Player::changeStationURL(const String &url)
   m3u8Urls.clear();
   m3u8Urls.push(url);
   isChannelChanged = true;
-  uint8_t leftNum = 2;
+  uint8_t leftNum = 1;
   if(aacUrls.length() >= leftNum){ aacUrls.tearOff(leftNum); }
   return true;
 }
