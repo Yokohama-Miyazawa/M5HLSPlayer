@@ -62,6 +62,12 @@ String getRequest(const String &url)
       log_d("%s", payload.c_str());
       response = payload;
     }
+    else if (httpCode == HTTP_CODE_MOVED_PERMANENTLY || httpCode == HTTP_CODE_FOUND || httpCode == HTTP_CODE_SEE_OTHER ||
+             httpCode == HTTP_CODE_TEMPORARY_REDIRECT || httpCode == HTTP_CODE_PERMANENT_REDIRECT)
+    {
+      response = http.getLocation();
+      log_d("CODE 3XX LOCATION: %s", response.c_str());
+    }
     else
     {
       response = "NO PAYLOAD";
@@ -98,11 +104,15 @@ int parseResponse(const String &res, uint8_t &duration, StringStack &m3u8Urls, S
     { // CRLF
       currentLine = res.substring(currentHead, cr);
     }
-    else
+    else if (lf >= 0)
     { // LF
       currentLine = res.substring(currentHead, lf);
     }
-    currentHead = lf + 1;
+    else
+    { // only one line
+      currentLine = res;
+    }
+    currentHead = (lf >= 0) ? lf + 1 : length;
     log_d("CURRENT LINE: %s", currentLine.c_str());
     if (currentLine.indexOf("#EXT-X-TARGETDURATION:") == 0)
     {
