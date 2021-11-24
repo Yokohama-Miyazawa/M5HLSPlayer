@@ -80,9 +80,9 @@ String getRequest(const String &url)
 int parseResponse(const String &res, uint8_t &duration, StringStack &m3u8Urls, StringQueue &aacUrls)
 {
   uint8_t status = 0; // found .acc: 1, found .m3u8: 2, others: 0
-  uint32_t length = res.length();
-  uint16_t currentHead = 0;
-  uint16_t cr, lf;
+  int32_t length = res.length();
+  int16_t currentHead = 0;
+  int16_t cr, lf;
   String currentLine, newUrl;
 
   while (true)
@@ -93,6 +93,7 @@ int parseResponse(const String &res, uint8_t &duration, StringStack &m3u8Urls, S
     }
     cr = res.indexOf('\r', currentHead);
     lf = res.indexOf('\n', currentHead);
+    log_v("CURRENT HEAD: %d CR: %d LF: %d", currentHead, cr, lf);
     if (cr >= 0)
     { // CRLF
       currentLine = res.substring(currentHead, cr);
@@ -102,7 +103,7 @@ int parseResponse(const String &res, uint8_t &duration, StringStack &m3u8Urls, S
       currentLine = res.substring(currentHead, lf);
     }
     currentHead = lf + 1;
-    log_d("%s", currentLine.c_str());
+    log_d("CURRENT LINE: %s", currentLine.c_str());
     if (currentLine.indexOf("#EXT-X-TARGETDURATION:") == 0)
     {
       duration = currentLine.substring(22).toInt();
