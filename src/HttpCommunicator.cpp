@@ -131,7 +131,16 @@ int parseResponse(const String &res, uint8_t &duration, StringStack &m3u8Urls, S
     {
       if (!status)
         status = 2;
-      newUrl = currentLine;
+      if (currentLine.indexOf("http") == 0)
+      {
+        newUrl = currentLine;
+      }
+      else
+      {
+        String latestM3u8Url = m3u8Urls.peek();
+        uint32_t lastSlashOfM3u8 = latestM3u8Url.lastIndexOf('/');
+        newUrl = latestM3u8Url.substring(0, lastSlashOfM3u8 + 1) + currentLine;
+      }
       if (!m3u8Urls.search(newUrl))
         m3u8Urls.push(convertHTTPStoHTTP(newUrl));
     }
