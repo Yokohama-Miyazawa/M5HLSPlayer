@@ -83,7 +83,7 @@ String getRequest(const String &url)
   return response;
 }
 
-int parseResponse(const String &res, uint8_t &duration, StringStack &m3u8Urls, StringQueue &aacUrls)
+int parseResponse(const String &res, uint8_t &duration, Stack<String> &m3u8Urls, Queue<String> &aacUrls)
 {
   uint8_t status = 0; // found .acc: 1, found .m3u8: 2, others: 0
   int32_t length = res.length();
@@ -128,6 +128,7 @@ int parseResponse(const String &res, uint8_t &duration, StringStack &m3u8Urls, S
       }
       else
       {
+        while(!m3u8Urls.depth()){ delay(100); }
         String latestM3u8Url = m3u8Urls.peek();
         uint32_t lastSlashOfM3u8 = latestM3u8Url.lastIndexOf('/');
         newUrl = latestM3u8Url.substring(0, lastSlashOfM3u8 + 1) + currentLine;
@@ -147,6 +148,7 @@ int parseResponse(const String &res, uint8_t &duration, StringStack &m3u8Urls, S
       }
       else
       {
+        while(!m3u8Urls.depth()){ delay(100); }
         String latestM3u8Url = m3u8Urls.peek();
         uint32_t lastSlashOfM3u8 = latestM3u8Url.lastIndexOf('/');
         newUrl = latestM3u8Url.substring(0, lastSlashOfM3u8 + 1) + currentLine;

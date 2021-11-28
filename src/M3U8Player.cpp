@@ -67,6 +67,7 @@ void M3U8Player::scrapeM3U8()
   uint8_t status;
   do
   {
+    while(!m3u8Urls.depth()){ delay(100); }
     res = getRequest(m3u8Urls.peek());
     status = parseResponse(res, targetDuration, m3u8Urls, aacUrls);
     log_v("status: %d", status);
@@ -89,6 +90,7 @@ void M3U8Player::scrapeAAC(void* m3u8PlayerInstance)
       instance->scrapeM3U8();
     if (millis() - lastRequested >= instance->targetDuration * KILO)
     {
+      while(!instance->m3u8Urls.depth()){ delay(100); }
       res = getRequest(instance->m3u8Urls.peek());
       status = parseResponse(res, instance->targetDuration, instance->m3u8Urls, instance->aacUrls);
       if (status == 0)
@@ -117,6 +119,7 @@ void M3U8Player::setBuffer(void *m3u8PlayerInstance)
       file = new AudioFileSourceHTTPStream(convertedUrl.c_str());
       instance->nextBuff = new AudioFileSourceBuffer(file, instance->buffSize);
       instance->needNextBuff = false;
+      instance->fileQueue.push(file);
     }
     delay(100);
   }
@@ -156,6 +159,7 @@ void M3U8Player::playAAC(void *m3u8PlayerInstance)
       {
         instance->aac->stop();
         instance->buff->close();
+        delete instance->fileQueue.pop();
         delete instance->buff;
         instance->buff = instance->nextBuff;
         instance->nextBuff = NULL;
