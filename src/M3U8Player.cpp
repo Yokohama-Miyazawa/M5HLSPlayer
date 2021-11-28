@@ -117,6 +117,7 @@ void M3U8Player::setBuffer(void *m3u8PlayerInstance)
       file = new AudioFileSourceHTTPStream(convertedUrl.c_str());
       instance->nextBuff = new AudioFileSourceBuffer(file, instance->buffSize);
       instance->needNextBuff = false;
+      instance->fileQueue.push(file);
     }
     delay(100);
   }
@@ -156,6 +157,7 @@ void M3U8Player::playAAC(void *m3u8PlayerInstance)
       {
         instance->aac->stop();
         instance->buff->close();
+        delete instance->fileQueue.pop();
         delete instance->buff;
         instance->buff = instance->nextBuff;
         instance->nextBuff = NULL;

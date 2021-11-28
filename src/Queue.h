@@ -25,7 +25,7 @@ public:
     T pop(){
         if(length() == 0) {
             Serial.println("This Queue is already empty.");
-            return "";
+            exit(1);
         }
         T element = data[head];
         head = (head + 1) % size;

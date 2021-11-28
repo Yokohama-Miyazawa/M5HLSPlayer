@@ -30,6 +30,7 @@ private:
   uint8_t targetDuration;
   Queue<String> aacUrls;
   StringStack m3u8Urls;
+  Queue<AudioFileSourceHTTPStream*> fileQueue;
   bool isChannelChanged;
   bool needNextBuff;
   bool isPlaying;
