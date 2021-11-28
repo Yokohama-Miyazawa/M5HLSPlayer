@@ -28,7 +28,7 @@ private:
   AudioOutputI2S *out;
   uint32_t buffSize;
   uint8_t targetDuration;
-  StringQueue aacUrls;
+  Queue<String> aacUrls;
   StringStack m3u8Urls;
   bool isChannelChanged;
   bool needNextBuff;
