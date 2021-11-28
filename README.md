@@ -1,31 +1,23 @@
+[日本語版README](./README-jp.md)
 # M5M3U8Player  
-M5StackでM3U8形式のWebラジオを再生するプログラム  
+Web radio player in .m3u8 format  
+Only .aac, currently not .ts  
 
-## 前提ライブラリ  
+## Prerequisite 　
 [ESP8266Audio](https://github.com/earlephilhower/ESP8266Audio)  
-ただし、下記2箇所にコードを追加する必要あり。  
+In addition, you need to add a code like the following.  
 
 ### AudioFileSourceHTTPStream.cpp  
 ```
 bool AudioFileSourceHTTPStream::close()
 {
   http.end();
-  client.stop();  // このコードを追加する
+  client.stop();  // Add this line
   return true;
 }
 ```
 
-### AudioFileSourceBuffer.cpp  
-```
-AudioFileSourceBuffer::~AudioFileSourceBuffer()
-{
-  if (deallocateBuffer) free(buffer);
-  buffer = NULL;
-  delete src;  // このコードを追加する
-}
-```
-
-## 使い方  
+## Usage  
 ### PlatformIO  
-プロジェクトを作成し、libディレクトリにこのリポジトリを配置する。  
-examplesディレクトリの例を参考に、main.cppからこのライブラリを呼び出す。  
+Create a project and place this repository in the lib directory.  
+Call this library from main.cpp (see examples for details).  
