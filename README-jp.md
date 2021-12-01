@@ -1,6 +1,6 @@
 [English README](./README.md)
 # M5M3U8Player  
-M5StackでM3U8形式のWebラジオを再生するプログラム  
+M5StackおよびM5StickCでM3U8形式のWebラジオを再生するプログラム  
 .aacのみ対応。現在 .tsには非対応  
 
 ## 前提ライブラリ  
