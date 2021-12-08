@@ -1,7 +1,8 @@
 #include <Arduino.h>
 #include <HTTPClient.h>
 #include "AudioFileSourceHTTPStream.h"
-#include "AudioGeneratorAAC.h"
+//#include "AudioGeneratorAAC.h"
+#include "AudioGeneratorTS.h"
 #include "AudioFileSourceBuffer.h"
 #include "AudioOutputI2S.h"
 #include "HttpCommunicator.h"
@@ -22,7 +23,8 @@ private:
   TaskHandle_t scrapeAACHandle;
   TaskHandle_t setBufferHandle;
   TaskHandle_t playAACHandle;
-  AudioGeneratorAAC *aac;
+  //AudioGeneratorAAC *aac;
+  AudioGeneratorTS *aac;
   AudioFileSourceBuffer *buff;
   AudioFileSourceBuffer *nextBuff;
   AudioOutputI2S *out;

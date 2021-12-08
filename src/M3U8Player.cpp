@@ -17,7 +17,8 @@ M3U8Player::M3U8Player(String url)
   out = new AudioOutputI2S(0, 1);
   out->SetOutputModeMono(true);
   out->SetGain(volume / 100.0);
-  aac = new AudioGeneratorAAC();
+  //aac = new AudioGeneratorAAC();
+  aac = new AudioGeneratorTS();
 
   delay(1000);
   scrapeM3U8();
@@ -43,7 +44,8 @@ M3U8Player::M3U8Player(String url, const float &startVolume)
   out = new AudioOutputI2S(0, 1);
   out->SetOutputModeMono(true);
   out->SetGain(volume / 100.0);
-  aac = new AudioGeneratorAAC();
+  //aac = new AudioGeneratorAAC();
+  aac = new AudioGeneratorTS();
 
   delay(1000);
   scrapeM3U8();
