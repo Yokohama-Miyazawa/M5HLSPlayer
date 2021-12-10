@@ -1,11 +1,15 @@
 #include <Arduino.h>
 #include <HTTPClient.h>
-#include "AudioFileSourceHTTPStream.h"
-//#include "AudioGeneratorAAC.h"
-#include "AudioGeneratorTS.h"
-#include "AudioFileSourceBuffer.h"
-#include "AudioOutputI2S.h"
+#include <AudioFileSourceHTTPStream.h>
+#include <AudioFileSourceBuffer.h>
+#include <AudioOutputI2S.h>
 #include "HttpCommunicator.h"
+#include "AudioGeneratorTS.h"
+
+typedef struct {
+  bool isTS;
+  AudioFileSourceBuffer *buffer;
+} sourceBuffer;
 
 class M3U8Player {
 public:
@@ -23,10 +27,9 @@ private:
   TaskHandle_t scrapeAACHandle;
   TaskHandle_t setBufferHandle;
   TaskHandle_t playAACHandle;
-  //AudioGeneratorAAC *aac;
-  AudioGeneratorTS *aac;
-  AudioFileSourceBuffer *buff;
-  AudioFileSourceBuffer *nextBuff;
+  AudioGeneratorTS *ts;
+  sourceBuffer buff;
+  sourceBuffer nextBuff;
   AudioOutputI2S *out;
   uint32_t buffSize;
   uint8_t targetDuration;

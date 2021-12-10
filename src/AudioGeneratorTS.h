@@ -42,6 +42,8 @@ class AudioGeneratorTS : public AudioGenerator
     virtual bool loop() override;
     virtual bool stop() override;
     virtual bool isRunning() override;
+    void switchMode(bool isTS);
+    void reset();
 
   protected:
     void *preallocateSpace;
@@ -68,6 +70,9 @@ class AudioGeneratorTS : public AudioGenerator
     bool isSyncByteFound;
     pid_array pidsOfPMT;
     pid_array pidsOfAAC;
+
+    // Mode switching (Mpeg2-ts or aac)
+    bool isInputTs;
 
     // Output buffering
     int16_t *outSample; //[1024 * 2]; // Interleaved L/R

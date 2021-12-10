@@ -17,14 +17,13 @@ M3U8Player::M3U8Player(String url)
   out = new AudioOutputI2S(0, 1);
   out->SetOutputModeMono(true);
   out->SetGain(volume / 100.0);
-  //aac = new AudioGeneratorAAC();
-  aac = new AudioGeneratorTS();
+  ts = new AudioGeneratorTS();
 
   delay(1000);
   scrapeM3U8();
   xTaskCreatePinnedToCore(this->scrapeAAC, "scrapeAAC", 2048 * 3, this, 0, &scrapeAACHandle, 0);
   xTaskCreatePinnedToCore(this->setBuffer, "setBuffer", 2048 * 1, this, 1, &setBufferHandle, 0);
-  xTaskCreatePinnedToCore(this->playAAC,   "playAAC",   2048 * 1, this, 2, &playAACHandle,   1);
+  xTaskCreatePinnedToCore(this->playAAC,   "playAAC",   2048 * 4, this, 2, &playAACHandle,   1);
 }
 
 M3U8Player::M3U8Player(String url, const float &startVolume)
@@ -44,14 +43,13 @@ M3U8Player::M3U8Player(String url, const float &startVolume)
   out = new AudioOutputI2S(0, 1);
   out->SetOutputModeMono(true);
   out->SetGain(volume / 100.0);
-  //aac = new AudioGeneratorAAC();
-  aac = new AudioGeneratorTS();
+  ts = new AudioGeneratorTS();
 
   delay(1000);
   scrapeM3U8();
   xTaskCreatePinnedToCore(this->scrapeAAC, "scrapeAAC", 2048 * 3, this, 0, &scrapeAACHandle, 0);
   xTaskCreatePinnedToCore(this->setBuffer, "setBuffer", 2048 * 1, this, 1, &setBufferHandle, 0);
-  xTaskCreatePinnedToCore(this->playAAC,   "playAAC",   2048 * 1, this, 2, &playAACHandle,   1);
+  xTaskCreatePinnedToCore(this->playAAC,   "playAAC",   2048 * 4, this, 2, &playAACHandle,   1);
 }
 
 M3U8Player::~M3U8Player(){
@@ -59,7 +57,7 @@ M3U8Player::~M3U8Player(){
   vTaskDelete(setBufferHandle);
   vTaskDelete(playAACHandle);
   delete out;
-  delete aac;
+  delete ts;
   log_d("M3U8Player destructed.");
 }
 
@@ -119,7 +117,8 @@ void M3U8Player::setBuffer(void *m3u8PlayerInstance)
       convertedUrl = convertHTTPStoHTTP(instance->aacUrls.pop());
       log_i("%s", convertedUrl.c_str());
       file = new AudioFileSourceHTTPStream(convertedUrl.c_str());
-      instance->nextBuff = new AudioFileSourceBuffer(file, instance->buffSize);
+      instance->nextBuff.isTS = (convertedUrl.indexOf(".ts") >= 0) ? true : false;
+      instance->nextBuff.buffer = new AudioFileSourceBuffer(file, instance->buffSize);
       instance->needNextBuff = false;
       instance->fileQueue.push(file);
     }
@@ -134,22 +133,24 @@ void M3U8Player::playAAC(void *m3u8PlayerInstance)
   bool isNextBuffPrepared = false;
   instance->needNextBuff = true;
   while (!instance->isPlaying || instance->aacUrls.length() == 0){ delay(1000); }
-  while (!instance->nextBuff){ delay(100); }
+  while (!instance->nextBuff.buffer){ delay(100); }
   instance->buff = instance->nextBuff;
+  instance->ts->reset();
+  instance->ts->switchMode(instance->buff.isTS);
 
   while (true)
   {
-    if (!instance->aac->begin(instance->buff, instance->out))
+    if (!instance->ts->begin(instance->buff.buffer, instance->out))
     {
       Serial.println("Player start failed.");
-      instance->buff->close();
-      delete instance->buff;
-      instance->nextBuff = NULL;
+      instance->buff.buffer->close();
+      delete instance->buff.buffer;
+      instance->nextBuff.buffer = NULL;
       goto restart;
     }
-    while (instance->aac->isRunning())
+    while (instance->ts->isRunning())
     {
-      if (!isNextBuffPrepared && instance->buff->getSize() < 3 * instance->buff->getPos())
+      if (!isNextBuffPrepared && instance->buff.buffer->getSize() < 3 * instance->buff.buffer->getPos())
       {
         isNextBuffPrepared = true;
         log_i("urls: %d", instance->aacUrls.length());
@@ -157,15 +158,17 @@ void M3U8Player::playAAC(void *m3u8PlayerInstance)
         log_i("prepare next buffer");
         instance->needNextBuff = true;
       }
-      if (!instance->aac->loop())
+      if (!instance->ts->loop())
       {
-        instance->aac->stop();
-        instance->buff->close();
+        instance->ts->stop();
+        instance->buff.buffer->close();
         delete instance->fileQueue.pop();
-        delete instance->buff;
+        delete instance->buff.buffer;
         instance->buff = instance->nextBuff;
-        instance->nextBuff = NULL;
+        instance->nextBuff.buffer = NULL;
         isNextBuffPrepared = false;
+        instance->ts->reset();
+        instance->ts->switchMode(instance->buff.isTS);
       }
     }
   }

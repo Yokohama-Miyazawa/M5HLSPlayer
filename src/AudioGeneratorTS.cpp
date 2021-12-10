@@ -51,6 +51,7 @@ AudioGeneratorTS::AudioGeneratorTS()
   lastRate = 0;
   lastChannels = 0;
 
+  isInputTs = true;
   isSyncByteFound = false;
   pidsOfPMT.number = 0;
   pidsOfAAC.number = 0;
@@ -88,6 +89,7 @@ AudioGeneratorTS::AudioGeneratorTS(void *preallocateData, int preallocateSz)
   lastRate = 0;
   lastChannels = 0;
 
+  isInputTs = true;
   isSyncByteFound = false;
   pidsOfPMT.number = 0;
   pidsOfAAC.number = 0;
@@ -116,20 +118,31 @@ bool AudioGeneratorTS::isRunning()
   return running;
 }
 
+void AudioGeneratorTS::switchMode(bool isTS)
+{
+  isInputTs = isTS;
+}
+
+void AudioGeneratorTS::reset()
+{
+  isSyncByteFound = false;
+  pidsOfPMT.number = 0;
+  pidsOfAAC.number = 0;
+}
 
 void AudioGeneratorTS::parsePAT(uint8_t *pat)
 {
   int startOfProgramNums = 8;
   int lengthOfPATValue = 4;
   int sectionLength = ((pat[1] & 0x0F) << 8) | (pat[2] & 0xFF);
-  log_d("Section Length: %d", sectionLength);
+  log_v("Section Length: %d", sectionLength);
   int program_number, program_map_PID;
   int indexOfPids = 0;
   for (int i = startOfProgramNums; i <= sectionLength; i += lengthOfPATValue)
   {
     program_number = ((pat[i] & 0xFF) << 8) | (pat[i + 1] & 0xFF);
     program_map_PID = ((pat[i + 2] & 0x1F) << 8) | (pat[i + 3] & 0xFF);
-    log_d("Program Num: 0x%04X(%d) PMT PID: 0x%04X(%d)",
+    log_v("Program Num: 0x%04X(%d) PMT PID: 0x%04X(%d)",
           program_number, program_number, program_map_PID, program_map_PID);
     pidsOfPMT.pids[indexOfPids++] = program_map_PID;
   }
@@ -140,9 +153,9 @@ void AudioGeneratorTS::parsePMT(uint8_t *pat)
 {
   int staticLengthOfPMT = 12;
   int sectionLength = ((pat[1] & 0x0F) << 8) | (pat[2] & 0xFF);
-  log_d("Section Length: %d", sectionLength);
+  log_v("Section Length: %d", sectionLength);
   int programInfoLength = ((pat[10] & 0x0F) << 8) | (pat[11] & 0xFF);
-  log_d("Program Info Length: %d", programInfoLength);
+  log_v("Program Info Length: %d", programInfoLength);
 
   int indexOfPids = pidsOfAAC.number;
   int cursor = staticLengthOfPMT + programInfoLength;
@@ -150,17 +163,17 @@ void AudioGeneratorTS::parsePMT(uint8_t *pat)
   {
     int streamType = pat[cursor] & 0xFF;
     int elementaryPID = ((pat[cursor + 1] & 0x1F) << 8) | (pat[cursor + 2] & 0xFF);
-    log_d("Stream Type: 0x%02X(%d) Elementary PID: 0x%04X(%d)",
+    log_v("Stream Type: 0x%02X(%d) Elementary PID: 0x%04X(%d)",
           streamType, streamType, elementaryPID, elementaryPID);
 
     if (streamType == 0x0F || streamType == 0x11)
     {
-      log_d("found AAC PID");
+      log_v("found AAC PID");
       pidsOfAAC.pids[indexOfPids++] = elementaryPID;
     }
 
     int esInfoLength = ((pat[cursor + 3] & 0x0F) << 8) | (pat[cursor + 4] & 0xFF);
-    log_d("ES Info Length: 0x%04X(%d)", esInfoLength, esInfoLength);
+    log_v("ES Info Length: 0x%04X(%d)", esInfoLength, esInfoLength);
     cursor += 5 + esInfoLength;
   }
   pidsOfAAC.number = indexOfPids;
@@ -169,50 +182,50 @@ void AudioGeneratorTS::parsePMT(uint8_t *pat)
 void AudioGeneratorTS::showBinary(uint8_t *data, int len, String comment="Show Binary")
 {
   if(len <= 0) return;
-  log_e("%s", comment.c_str());
-  //log_e("data[0]: %02X", data[0]);
-  log_e("len: %d", len);
-  log_e("data[0]: %02X, data[-1]: %02X", data[0], data[len-1]);
-  //log_e("%s", (comment+" Whole").c_str());
+  log_v("%s", comment.c_str());
+  //log_v("data[0]: %02X", data[0]);
+  log_v("len: %d", len);
+  log_v("data[0]: %02X, data[-1]: %02X", data[0], data[len-1]);
+  //log_v("%s", (comment+" Whole").c_str());
   //for (int i = 0; i < len; i++){Serial.printf("%02X", data[i]);}
-  //log_e("\n%s", (comment+" END").c_str());
+  //log_v("\n%s", (comment+" END").c_str());
 }
 
 int AudioGeneratorTS::parsePES(uint8_t *pat, int posOfPacketStart, uint8_t *data)
 {
-  log_i("Address of pat: %d, of data %d", pat, data);
+  log_v("Address of pat: %d, of data %d", pat, data);
   int dataSize;
   int firstByte = pat[0] & 0xFF;
   int secondByte = pat[1] & 0xFF;
   int thirdByte = pat[2] & 0xFF;
-  log_d("First 3 bytes: %02X %02X %02X", firstByte, secondByte, thirdByte);
+  log_v("First 3 bytes: %02X %02X %02X", firstByte, secondByte, thirdByte);
   if (firstByte == 0x00 && secondByte == 0x00 && thirdByte == 0x01)
   {
     int PESRemainingPacketLength = ((pat[4] & 0xFF) << 8) | (pat[5] & 0xFF);
-    log_d("PES Packet length: %d", PESRemainingPacketLength);
+    log_v("PES Packet length: %d", PESRemainingPacketLength);
     int posOfHeaderLength = 8;
     int PESRemainingHeaderLength = pat[posOfHeaderLength] & 0xFF;
-    log_d("PES Header length: %d", PESRemainingHeaderLength);
+    log_v("PES Header length: %d", PESRemainingHeaderLength);
     int startOfData = posOfHeaderLength + PESRemainingHeaderLength + 1;
-    log_d("First AAC data byte: %02X", pat[startOfData]);
+    log_v("First AAC data byte: %02X", pat[startOfData]);
     // fwrite(&pat[startOfData], 1, (TS_PACKET_SIZE - posOfPacketStart) - startOfData, wfp);
     dataSize = (TS_PACKET_SIZE - posOfPacketStart) - startOfData;
-    log_d("dataSize: %d", dataSize);
+    log_v("dataSize: %d", dataSize);
     memcpy(data, &pat[startOfData], dataSize);
-    log_d("pat tail: %02X, data tail: %02X", pat[TS_PACKET_SIZE - posOfPacketStart - 1], data[dataSize - 1]);
+    log_v("pat tail: %02X, data tail: %02X", pat[TS_PACKET_SIZE - posOfPacketStart - 1], data[dataSize - 1]);
   }
   else
   {
-    log_d("First AAC data byte: %02X", pat[0]);
+    log_v("First AAC data byte: %02X", pat[0]);
     // fwrite(pat, 1, TS_PACKET_SIZE - posOfPacketStart, wfp);
     dataSize = TS_PACKET_SIZE - posOfPacketStart;
-    log_d("dataSize: %d", dataSize);
+    log_v("dataSize: %d", dataSize);
     memcpy(data, pat, dataSize);
-    log_d("pat tail: %02X, data tail: %02X", pat[dataSize - 1], data[dataSize - 1]);
+    log_v("pat tail: %02X, data tail: %02X", pat[dataSize - 1], data[dataSize - 1]);
   }
-  log_i("First 3 bytes of Copied Data: %02X %02X %02X", data[0], data[1], data[2]);
+  log_v("First 3 bytes of Copied Data: %02X %02X %02X", data[0], data[1], data[2]);
   //showBinary(data, dataSize, "@parsePES");
-  //log_i("dataSize: %d\n", dataSize);
+  //log_v("dataSize: %d\n", dataSize);
   return dataSize;
 }
 
@@ -221,27 +234,27 @@ int AudioGeneratorTS::parsePacket(uint8_t *packet, uint8_t *data)
   int read = 0;
 
   int pid = ((packet[1] & 0x1F) << 8) | (packet[2] & 0xFF);
-  log_d("PID: 0x%04X(%d)", pid, pid);
+  log_v("PID: 0x%04X(%d)", pid, pid);
   int payloadUnitStartIndicator = (packet[1] & 0x40) >> 6;
-  log_d("Payload Unit Start Indicator: %d", payloadUnitStartIndicator);
+  log_v("Payload Unit Start Indicator: %d", payloadUnitStartIndicator);
   int adaptionFieldControl = (packet[3] & 0x30) >> 4;
-  log_d("Adaption Field Control: %d", adaptionFieldControl);
+  log_v("Adaption Field Control: %d", adaptionFieldControl);
   int remainingAdaptationFieldLength = -1;
   if ((adaptionFieldControl & 0b10) == 0b10)
   {
     remainingAdaptationFieldLength = packet[4] & 0xFF;
-    log_d("Adaptation Field Length: %d", remainingAdaptationFieldLength);
+    log_v("Adaptation Field Length: %d", remainingAdaptationFieldLength);
   }
 
   int payloadStart = payloadUnitStartIndicator ? 5 : 4;
 
   if (pid == 0){
-    log_d("parse PAT");
+    log_v("parse PAT");
     parsePAT(&packet[payloadStart]);
   } else if (pidsOfAAC.number){
     for (int i = 0; i < pidsOfAAC.number; i++){
       if (pid == pidsOfAAC.pids[i]){
-        log_d("found AAC");
+        log_v("found AAC");
         int posOfPacketSrart = 4;
         if (remainingAdaptationFieldLength >= 0){
           posOfPacketSrart = 5 + remainingAdaptationFieldLength;
@@ -254,16 +267,16 @@ int AudioGeneratorTS::parsePacket(uint8_t *packet, uint8_t *data)
   } else if (pidsOfPMT.number){
     for (int i = 0; i < pidsOfPMT.number; i++){
       if (pid == pidsOfPMT.pids[i]){
-        log_d("found PMT");
+        log_v("found PMT");
         parsePMT(&packet[payloadStart]);
       }
     }
   }
   showBinary(data, read, "@parsePacket");
   if(read > 0){
-    log_e("read: %d\n", read);
+    log_v("read: %d\n", read);
   } else {
-    log_e("PID: %d", pid);
+    log_v("PID: %d", pid);
   }
   return read;
 }
@@ -274,26 +287,23 @@ uint32_t AudioGeneratorTS::readFile(void *data, uint32_t len)
   len -= len % TS_PACKET_SIZE;
   if(len == 0 || len < TS_PACKET_SIZE) { return 0; }
 
-  int read = 0;
+  int read;
   int aacRead = 0;
-  int tsRead = 0;
   do {
     if(!isSyncByteFound) {
-      int oneByte;
-      do { tsRead += file->read(&oneByte, 1); } while (oneByte != 0x47);
+      uint8_t oneByte;
+      do { log_e("finding sync byte...");file->read(&oneByte, 1); log_e("One Byte: 0x%02X", oneByte);} while (oneByte != 0x47);
       isSyncByteFound = true;
       read = file->read(&packetBuff[1], TS_PACKET_SIZE-1);
     } else {
       read = file->read(packetBuff, TS_PACKET_SIZE);
     }
-    aacRead += parsePacket(packetBuff, &reinterpret_cast<uint8_t*>(data)[aacRead]);
-    log_e("read: %d", read);
-    tsRead += read;
+    if(read){ aacRead += parsePacket(packetBuff, &reinterpret_cast<uint8_t*>(data)[aacRead]); }
   } while ((len - aacRead) >= TS_PACKET_SIZE && read);
 
   showBinary(reinterpret_cast<uint8_t*>(data), aacRead, "# READFILE #");
 
-  log_d("aacRead: %d", aacRead);
+  log_v("aacRead: %d", aacRead);
   return aacRead;
 }
 
@@ -309,12 +319,12 @@ bool AudioGeneratorTS::FillBufferWithValidFrame()
       if (buffValid && buff[buffValid-1]==0xff) { // Could be 1st half of syncword, preserve it...
         buff[0] = 0xff;
         //buffValid = file->read(buff+1, buffLen-1);
-        buffValid = readFile(buff+1, buffLen-1);
+        buffValid = isInputTs ? readFile(buff+1, buffLen-1) : file->read(buff+1, buffLen-1);
         log_v("buffValid: %d", buffValid);
         if (buffValid==0) return false; // No data available, EOF
       } else { // Try a whole new buffer
         //buffValid = file->read(buff, buffLen-1);
-        buffValid = readFile(buff, buffLen-1);
+        buffValid = isInputTs ? readFile(buff, buffLen-1) : file->read(buff, buffLen-1);
         log_v("buffValid: %d", buffValid);
         if (buffValid==0) return false; // No data available, EOF
       }
@@ -327,7 +337,7 @@ bool AudioGeneratorTS::FillBufferWithValidFrame()
 
   // We have a sync word at 0 now, try and fill remainder of buffer
   //buffValid += file->read(buff + buffValid, buffLen - buffValid);
-  buffValid += readFile(buff + buffValid, buffLen - buffValid);
+  buffValid += isInputTs ? readFile(buff + buffValid, buffLen - buffValid) : file->read(buff + buffValid, buffLen - buffValid);
   log_v("buffValid: %d", buffValid);
 
   return true;
