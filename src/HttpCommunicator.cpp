@@ -118,7 +118,7 @@ int parseResponse(const String &res, uint8_t &duration, Stack<String> &m3u8Urls,
     {
       duration = currentLine.substring(22).toInt();
     }
-    if (currentLine.indexOf(".aac") >= 0)
+    if (currentLine.indexOf(".aac") >= 0 || currentLine.indexOf(".ts") >= 0)
     {
       if (!status)
         status = 1;

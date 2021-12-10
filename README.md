@@ -1,7 +1,7 @@
 [日本語版README](./README-jp.md)
 # M5M3U8Player  
 Web radio player for M5Stack and M5StickC in .m3u8 format  
-Only .aac, currently not .ts   
+Support for .aac and .ts  
 
 ## Prerequisite 　
 [ESP8266Audio](https://github.com/earlephilhower/ESP8266Audio)  
