@@ -1,5 +1,5 @@
 [日本語版README](./README-jp.md)
-# M5M3U8Player  
+# M5HLSPlayer  
 Web radio player for M5Stack and M5StickC in .m3u8 format  
 Support for .aac and .ts  
 

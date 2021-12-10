@@ -1,5 +1,5 @@
 [English README](./README.md)
-# M5M3U8Player  
+# M5HLSPlayer  
 M5StackおよびM5StickCでM3U8形式のWebラジオを再生するプログラム   
 .aacと.tsに対応  
 
