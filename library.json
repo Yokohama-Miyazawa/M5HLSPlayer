@@ -1,0 +1,26 @@
+{
+  "name": "M5HLSPlayer",
+  "version": "0.0.0",
+  "description": "Web radio player for M5 in HTTP Live Streaming. Support .m3u8 (.aac and .ts).",
+  "keywords": "m5, m5stack, m5stickc, esp32, hls, m3u, m3u8, aac, ts, mpeg2, mpeg2-ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Yokohama-Miyazawa/M5HLSPlayer"
+  },
+  "authors": {
+    "name": "Osamu Miyazawa",
+    "email": "miyazawa.o.aa@m.titech.ac.jp",
+    "url": "https://github.com/Yokohama-Miyazawa/M5HLSPlayer"
+  },
+  "license": "GPL-3.0-only",
+  "frameworks": "arduino",
+  "dependencies": [
+    {
+      "name": "ESP8266Audio",
+      "version": "https://github.com/earlephilhower/ESP8266Audio/releases/tag/1.9.3"
+    }
+  ],
+  "examples": [
+      "examples/*/main.cpp"
+  ]
+}
