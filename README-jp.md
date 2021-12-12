@@ -22,3 +22,8 @@ bool AudioFileSourceHTTPStream::close()
 ### PlatformIO  
 プロジェクトを作成し、libディレクトリにこのリポジトリと前提ライブラリを配置する。  
 examplesディレクトリの例を参考に、main.cppからこのライブラリを呼び出す。  
+
+### Arduino IDE  
+スケッチを作成し、`Arduino/libraries/`ディレクトリにこのリポジトリと前提ライブラリを配置する。  
+examplesディレクトリの例を参考に、.inoファイルからこのライブラリを呼び出す。  
+

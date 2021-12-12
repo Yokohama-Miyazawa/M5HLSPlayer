@@ -24,3 +24,8 @@ bool AudioFileSourceHTTPStream::close()
 ### PlatformIO  
 Create a project and place this repository and the prerequisite library in the lib directory.  
 Call this library from main.cpp (see examples for details).  
+
+### Arduino IDE  
+Create a sketch and place this repository and the prerequisite library in the `Arduino/libraries/` directory.  
+Call this library from .ino file (see examples for details).  
+
