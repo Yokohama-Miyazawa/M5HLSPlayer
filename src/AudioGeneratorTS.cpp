@@ -194,7 +194,7 @@ void AudioGeneratorTS::showBinary(uint8_t *data, int len, String comment="Show B
 int AudioGeneratorTS::parsePES(uint8_t *pat, int posOfPacketStart, uint8_t *data)
 {
   log_v("Address of pat: %d, of data %d", pat, data);
-  int dataSize;
+  size_t dataSize;
   int firstByte = pat[0] & 0xFF;
   int secondByte = pat[1] & 0xFF;
   int thirdByte = pat[2] & 0xFF;
@@ -255,13 +255,11 @@ int AudioGeneratorTS::parsePacket(uint8_t *packet, uint8_t *data)
     for (int i = 0; i < pidsOfAAC.number; i++){
       if (pid == pidsOfAAC.pids[i]){
         log_v("found AAC");
-        int posOfPacketSrart = 4;
+        int posOfPacketStart = 4;
         if (remainingAdaptationFieldLength >= 0){
-          posOfPacketSrart = 5 + remainingAdaptationFieldLength;
-          read = parsePES(&packet[posOfPacketSrart], posOfPacketSrart, data);
-        }else{
-          read = parsePES(&packet[posOfPacketSrart], posOfPacketSrart, data);
+          posOfPacketStart = 5 + remainingAdaptationFieldLength;
         }
+        read = parsePES(&packet[posOfPacketStart], posOfPacketStart, data);
       }
     }
   } else if (pidsOfPMT.number){
