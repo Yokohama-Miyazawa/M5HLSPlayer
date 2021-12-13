@@ -292,7 +292,11 @@ uint32_t AudioGeneratorTS::readFile(void *data, uint32_t len)
   do {
     if(!isSyncByteFound) {
       uint8_t oneByte;
-      do { log_e("finding sync byte...");file->read(&oneByte, 1); log_e("One Byte: 0x%02X", oneByte);} while (oneByte != 0x47);
+      do {
+        log_d("finding sync byte...");
+        if(!file->read(&oneByte, 1)) return 0;
+        log_d("One Byte: 0x%02X", oneByte);
+      } while (oneByte != 0x47);
       isSyncByteFound = true;
       read = file->read(&packetBuff[1], TS_PACKET_SIZE-1);
     } else {

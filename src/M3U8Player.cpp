@@ -171,6 +171,7 @@ void M3U8Player::playAAC(void *m3u8PlayerInstance)
         instance->ts->switchMode(instance->buff.isTS);
       }
     }
+    delay(1);
   }
 }
 

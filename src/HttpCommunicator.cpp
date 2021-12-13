@@ -93,10 +93,7 @@ int parseResponse(const String &res, uint8_t &duration, Stack<String> &m3u8Urls,
 
   while (true)
   {
-    if (currentHead >= length)
-    {
-      return status;
-    }
+    if (currentHead >= length) return status;
     cr = res.indexOf('\r', currentHead);
     lf = res.indexOf('\n', currentHead);
     log_v("CURRENT HEAD: %d CR: %d LF: %d", currentHead, cr, lf);
@@ -132,7 +129,7 @@ int parseResponse(const String &res, uint8_t &duration, Stack<String> &m3u8Urls,
         String latestM3u8Url = m3u8Urls.peek();
         uint32_t lastSlashOfM3u8 = latestM3u8Url.lastIndexOf('/');
         newUrl = latestM3u8Url.substring(0, lastSlashOfM3u8 + 1) + currentLine;
-        log_v("cr: %d, lr: %d, null: %d, length: %d",
+        log_v("cr: %d, lf: %d, null: %d, length: %d",
               newUrl.indexOf('\r', 0), newUrl.indexOf('\n', 0), newUrl.indexOf('\0', 0), newUrl.length());
       }
       if (!aacUrls.search(newUrl))
