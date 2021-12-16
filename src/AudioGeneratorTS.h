@@ -53,7 +53,7 @@ class AudioGeneratorTS : public AudioGenerator
     HAACDecoder hAACDecoder;
 
     // Input buffering
-    const int buffLen = 1600;
+    const int buffLen = 1693;
     uint8_t *buff; //[1600]; // File buffer required to store at least a whole compressed frame
     int16_t buffValid;
     int16_t lastFrameEnd;
