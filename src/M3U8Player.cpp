@@ -131,6 +131,7 @@ void M3U8Player::playAAC(void *m3u8PlayerInstance)
 {
   M3U8Player *instance = (M3U8Player *)m3u8PlayerInstance;
   restart:
+  Serial.println("restarted or started.");
   bool isNextBuffPrepared = false;
   instance->needNextBuff = true;
   while (!instance->isPlaying || instance->aacUrls.length() == 0){ delay(1000); }
@@ -145,8 +146,8 @@ void M3U8Player::playAAC(void *m3u8PlayerInstance)
     {
       Serial.println("Player start failed.");
       instance->buff.buffer->close();
+      delete instance->fileQueue.pop();
       delete instance->buff.buffer;
-      instance->nextBuff.buffer = NULL;
       goto restart;
     }
     while (instance->ts->isRunning())
