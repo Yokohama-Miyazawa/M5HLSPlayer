@@ -145,9 +145,11 @@ void M3U8Player::playAAC(void *m3u8PlayerInstance)
     if (!instance->ts->begin(instance->buff.buffer, instance->out))
     {
       Serial.println("Player start failed.");
-      instance->buff.buffer->close();
-      delete instance->fileQueue.pop();
-      if(instance->buff.buffer) delete instance->buff.buffer;
+      if (instance->buff.buffer){
+        instance->buff.buffer->close();
+        delete instance->buff.buffer;
+      }
+      if(instance->fileQueue.length() > 1) delete instance->fileQueue.pop();
       goto restart;
     }
     while (instance->ts->isRunning())
