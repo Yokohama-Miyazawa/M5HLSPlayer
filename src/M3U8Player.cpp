@@ -23,7 +23,7 @@ M3U8Player::M3U8Player(String url)
   scrapeM3U8();
   xTaskCreatePinnedToCore(this->scrapeAAC, "scrapeAAC", 2048 * 3, this, 0, &scrapeAACHandle, 0);
   xTaskCreatePinnedToCore(this->setBuffer, "setBuffer", 2048 * 1, this, 1, &setBufferHandle, 0);
-  xTaskCreatePinnedToCore(this->playAAC,   "playAAC",   2048 * 12, this, 2, &playAACHandle,   1);
+  xTaskCreatePinnedToCore(this->playAAC,   "playAAC",   2048 * 4, this, 2, &playAACHandle,   1);
 }
 
 M3U8Player::M3U8Player(String url, const float &startVolume)
@@ -49,7 +49,7 @@ M3U8Player::M3U8Player(String url, const float &startVolume)
   scrapeM3U8();
   xTaskCreatePinnedToCore(this->scrapeAAC, "scrapeAAC", 2048 * 3, this, 0, &scrapeAACHandle, 0);
   xTaskCreatePinnedToCore(this->setBuffer, "setBuffer", 2048 * 1, this, 1, &setBufferHandle, 0);
-  xTaskCreatePinnedToCore(this->playAAC,   "playAAC",   2048 * 12, this, 2, &playAACHandle,   1);
+  xTaskCreatePinnedToCore(this->playAAC,   "playAAC",   2048 * 4, this, 2, &playAACHandle,   1);
 }
 
 M3U8Player::~M3U8Player(){

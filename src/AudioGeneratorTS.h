@@ -70,6 +70,7 @@ class AudioGeneratorTS : public AudioGenerator
     bool isSyncByteFound;
     pid_array pidsOfPMT;
     pid_array pidsOfAAC;
+    int16_t pesDataLength;
 
     // Mode switching (Mpeg2-ts or aac)
     bool isInputTs;

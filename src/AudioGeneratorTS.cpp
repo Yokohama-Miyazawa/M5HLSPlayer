@@ -55,6 +55,7 @@ AudioGeneratorTS::AudioGeneratorTS()
   isSyncByteFound = false;
   pidsOfPMT.number = 0;
   pidsOfAAC.number = 0;
+  pesDataLength = -1;
 }
 
 AudioGeneratorTS::AudioGeneratorTS(void *preallocateData, int preallocateSz)
@@ -93,6 +94,7 @@ AudioGeneratorTS::AudioGeneratorTS(void *preallocateData, int preallocateSz)
   isSyncByteFound = false;
   pidsOfPMT.number = 0;
   pidsOfAAC.number = 0;
+  pesDataLength = -1;
 }
 
 
@@ -128,6 +130,7 @@ void AudioGeneratorTS::reset()
   isSyncByteFound = false;
   pidsOfPMT.number = 0;
   pidsOfAAC.number = 0;
+  pesDataLength = -1;
 }
 
 void AudioGeneratorTS::parsePAT(uint8_t *pat)
@@ -194,49 +197,54 @@ void AudioGeneratorTS::showBinary(uint8_t *data, int len, String comment="Show B
 int AudioGeneratorTS::parsePES(uint8_t *pat, int posOfPacketStart, uint8_t *data)
 {
   log_v("Address of pat: %d, of data %d", pat, data);
+  if(pesDataLength < 1) log_e("pesDataLength: %d", pesDataLength);
   size_t dataSize;
-  uint8_t firstByte = pat[0] & 0xFF;
-  uint8_t secondByte = pat[1] & 0xFF;
-  uint8_t thirdByte = pat[2] & 0xFF;
-  log_v("First 3 bytes: %02X %02X %02X", firstByte, secondByte, thirdByte);
-  if (firstByte == 0x00 && secondByte == 0x00 && thirdByte == 0x01)
-  {
-    uint8_t streamID = pat[3] & 0xFF;
-    if(streamID < 0xC0 || streamID > 0xDF){
-      Serial.printf("Stream ID:%02X ", streamID);
-      if(0xE0 <= streamID && streamID <= 0xEF){
-        Serial.println("This is a Stream ID for Video.");
-      }else{
-        Serial.println("Wrong Stream ID for Audio.");
-      }
-      exit(1);
-    }
-    uint16_t PESRemainingPacketLength = ((pat[4] & 0xFF) << 8) | (pat[5] & 0xFF);
-    log_v("PES Packet length: %d", PESRemainingPacketLength);
-    uint8_t posOfHeaderLength = 8;
-    uint8_t PESRemainingHeaderLength = pat[posOfHeaderLength] & 0xFF;
-    log_v("PES Header length: %d", PESRemainingHeaderLength);
-    int startOfData = posOfHeaderLength + PESRemainingHeaderLength + 1;
-    log_v("First AAC data byte: %02X", pat[startOfData]);
-    // fwrite(&pat[startOfData], 1, (TS_PACKET_SIZE - posOfPacketStart) - startOfData, wfp);
-    dataSize = (TS_PACKET_SIZE - posOfPacketStart) - startOfData;
-    log_v("dataSize: %d", dataSize);
-    memcpy(data, &pat[startOfData], dataSize);
-    log_v("pat tail: %02X, data tail: %02X", pat[TS_PACKET_SIZE - posOfPacketStart - 1], data[dataSize - 1]);
-  }
-  else
+  if (pesDataLength > 0)
   {
     log_v("First AAC data byte: %02X", pat[0]);
-    // fwrite(pat, 1, TS_PACKET_SIZE - posOfPacketStart, wfp);
     dataSize = TS_PACKET_SIZE - posOfPacketStart;
     log_v("dataSize: %d", dataSize);
     memcpy(data, pat, dataSize);
+    pesDataLength -= dataSize;
     log_v("pat tail: %02X, data tail: %02X", pat[dataSize - 1], data[dataSize - 1]);
+    return dataSize;
   }
-  log_v("First 3 bytes of Copied Data: %02X %02X %02X", data[0], data[1], data[2]);
-  //showBinary(data, dataSize, "@parsePES");
-  //log_v("dataSize: %d\n", dataSize);
-  return dataSize;
+  else
+  {
+    uint8_t firstByte  = pat[0] & 0xFF;
+    uint8_t secondByte = pat[1] & 0xFF;
+    uint8_t thirdByte  = pat[2] & 0xFF;
+    log_v("First 3 bytes: %02X %02X %02X", firstByte, secondByte, thirdByte);
+    if (firstByte == 0x00 && secondByte == 0x00 && thirdByte == 0x01)
+    {
+      uint8_t streamID = pat[3] & 0xFF;
+      if(streamID < 0xC0 || streamID > 0xDF){
+        Serial.printf("Stream ID:%02X ", streamID);
+        if(0xE0 <= streamID && streamID <= 0xEF){
+        Serial.println("This is a Stream ID for Video.");
+        }else{
+        Serial.println("Wrong Stream ID for Audio.");
+        }
+        exit(1);
+      }
+      const uint8_t posOfPacketLengthLatterHalf = 5;
+      uint16_t PESRemainingPacketLength = ((pat[4] & 0xFF) << 8) | (pat[5] & 0xFF);
+      log_v("PES Packet length: %d", PESRemainingPacketLength);
+      pesDataLength = PESRemainingPacketLength;
+      const uint8_t posOfHeaderLength = 8;
+      uint8_t PESRemainingHeaderLength = pat[posOfHeaderLength] & 0xFF;
+      log_v("PES Header length: %d", PESRemainingHeaderLength);
+      int startOfData = posOfHeaderLength + PESRemainingHeaderLength + 1;
+      log_v("First AAC data byte: %02X", pat[startOfData]);
+      dataSize = (TS_PACKET_SIZE - posOfPacketStart) - startOfData;
+      log_v("dataSize: %d", dataSize);
+      memcpy(data, &pat[startOfData], dataSize);
+      pesDataLength -= (TS_PACKET_SIZE - posOfPacketStart) - (posOfPacketLengthLatterHalf + 1);
+      log_v("pat tail: %02X, data tail: %02X", pat[TS_PACKET_SIZE - posOfPacketStart - 1], data[dataSize - 1]);
+      return dataSize;
+    }
+  }
+  return 0;
 }
 
 int AudioGeneratorTS::parsePacket(uint8_t *packet, uint8_t *data)
