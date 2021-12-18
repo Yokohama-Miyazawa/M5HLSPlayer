@@ -412,7 +412,7 @@ bool AudioGeneratorTS::begin(AudioFileSource *source, AudioOutput *output)
   this->output = output;
   if (!file->isOpen()) return false; // Error
 
-  output->begin();
+  if(!output->begin()) return false;
   
   // AAC always comes out at 16 bits
   output->SetBitsPerSample(16);
