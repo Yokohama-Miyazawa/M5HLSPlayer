@@ -195,16 +195,26 @@ int AudioGeneratorTS::parsePES(uint8_t *pat, int posOfPacketStart, uint8_t *data
 {
   log_v("Address of pat: %d, of data %d", pat, data);
   size_t dataSize;
-  int firstByte = pat[0] & 0xFF;
-  int secondByte = pat[1] & 0xFF;
-  int thirdByte = pat[2] & 0xFF;
+  uint8_t firstByte = pat[0] & 0xFF;
+  uint8_t secondByte = pat[1] & 0xFF;
+  uint8_t thirdByte = pat[2] & 0xFF;
   log_v("First 3 bytes: %02X %02X %02X", firstByte, secondByte, thirdByte);
   if (firstByte == 0x00 && secondByte == 0x00 && thirdByte == 0x01)
   {
-    int PESRemainingPacketLength = ((pat[4] & 0xFF) << 8) | (pat[5] & 0xFF);
+    uint8_t streamID = pat[3] & 0xFF;
+    if(streamID < 0xC0 || streamID > 0xDF){
+      Serial.printf("Stream ID:%02X ", streamID);
+      if(0xE0 <= streamID && streamID <= 0xEF){
+        Serial.println("This is a Stream ID for Video.");
+      }else{
+        Serial.println("Wrong Stream ID for Audio.");
+      }
+      exit(1);
+    }
+    uint16_t PESRemainingPacketLength = ((pat[4] & 0xFF) << 8) | (pat[5] & 0xFF);
     log_v("PES Packet length: %d", PESRemainingPacketLength);
-    int posOfHeaderLength = 8;
-    int PESRemainingHeaderLength = pat[posOfHeaderLength] & 0xFF;
+    uint8_t posOfHeaderLength = 8;
+    uint8_t PESRemainingHeaderLength = pat[posOfHeaderLength] & 0xFF;
     log_v("PES Header length: %d", PESRemainingHeaderLength);
     int startOfData = posOfHeaderLength + PESRemainingHeaderLength + 1;
     log_v("First AAC data byte: %02X", pat[startOfData]);
