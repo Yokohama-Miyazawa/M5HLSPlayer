@@ -69,7 +69,7 @@ class AudioGeneratorTS : public AudioGenerator
     void showBinary(uint8_t *data, int len, String comment);
     bool isSyncByteFound;
     pid_array pidsOfPMT;
-    pid_array pidsOfAAC;
+    int16_t pidOfAAC;
     int16_t pesDataLength;
 
     // Mode switching (Mpeg2-ts or aac)

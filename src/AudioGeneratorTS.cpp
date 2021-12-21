@@ -54,7 +54,7 @@ AudioGeneratorTS::AudioGeneratorTS()
   isInputTs = true;
   isSyncByteFound = false;
   pidsOfPMT.number = 0;
-  pidsOfAAC.number = 0;
+  pidOfAAC = -1;
   pesDataLength = -1;
 }
 
@@ -93,7 +93,7 @@ AudioGeneratorTS::AudioGeneratorTS(void *preallocateData, int preallocateSz)
   isInputTs = true;
   isSyncByteFound = false;
   pidsOfPMT.number = 0;
-  pidsOfAAC.number = 0;
+  pidOfAAC = -1;
   pesDataLength = -1;
 }
 
@@ -129,7 +129,7 @@ void AudioGeneratorTS::reset()
 {
   isSyncByteFound = false;
   pidsOfPMT.number = 0;
-  pidsOfAAC.number = 0;
+  pidOfAAC = -1;
   pesDataLength = -1;
 }
 
@@ -160,7 +160,6 @@ void AudioGeneratorTS::parsePMT(uint8_t *pat)
   int programInfoLength = ((pat[10] & 0x0F) << 8) | (pat[11] & 0xFF);
   log_v("Program Info Length: %d", programInfoLength);
 
-  int indexOfPids = pidsOfAAC.number;
   int cursor = staticLengthOfPMT + programInfoLength;
   while (cursor < sectionLength - 1)
   {
@@ -172,14 +171,13 @@ void AudioGeneratorTS::parsePMT(uint8_t *pat)
     if (streamType == 0x0F || streamType == 0x11)
     {
       log_v("found AAC PID");
-      pidsOfAAC.pids[indexOfPids++] = elementaryPID;
+      pidOfAAC = elementaryPID;
     }
 
     int esInfoLength = ((pat[cursor + 3] & 0x0F) << 8) | (pat[cursor + 4] & 0xFF);
     log_v("ES Info Length: 0x%04X(%d)", esInfoLength, esInfoLength);
     cursor += 5 + esInfoLength;
   }
-  pidsOfAAC.number = indexOfPids;
 }
 
 void AudioGeneratorTS::showBinary(uint8_t *data, int len, String comment="Show Binary")
@@ -197,7 +195,7 @@ void AudioGeneratorTS::showBinary(uint8_t *data, int len, String comment="Show B
 int AudioGeneratorTS::parsePES(uint8_t *pat, int posOfPacketStart, uint8_t *data)
 {
   log_v("Address of pat: %d, of data %d", pat, data);
-  if(pesDataLength < 1) log_e("pesDataLength: %d", pesDataLength);
+  if(pesDataLength < 1) log_v("pesDataLength: %d", pesDataLength);
   size_t dataSize;
   if (pesDataLength > 0)
   {
@@ -269,17 +267,11 @@ int AudioGeneratorTS::parsePacket(uint8_t *packet, uint8_t *data)
   if (pid == 0){
     log_v("parse PAT");
     parsePAT(&packet[payloadStart]);
-  } else if (pidsOfAAC.number){
-    for (int i = 0; i < pidsOfAAC.number; i++){
-      if (pid == pidsOfAAC.pids[i]){
-        log_v("found AAC");
-        int posOfPacketStart = 4;
-        if (remainingAdaptationFieldLength >= 0){
-          posOfPacketStart = 5 + remainingAdaptationFieldLength;
-        }
-        read = parsePES(&packet[posOfPacketStart], posOfPacketStart, data);
-      }
-    }
+  } else if (pid == pidOfAAC){
+    log_v("found AAC");
+    int posOfPacketStart = 4;
+    if (remainingAdaptationFieldLength >= 0) posOfPacketStart = 5 + remainingAdaptationFieldLength;
+    read = parsePES(&packet[posOfPacketStart], posOfPacketStart, data);
   } else if (pidsOfPMT.number){
     for (int i = 0; i < pidsOfPMT.number; i++){
       if (pid == pidsOfPMT.pids[i]){
