@@ -4,13 +4,12 @@ Web radio player for M5Stack and M5StickC in .m3u8 format
 Support for .aac and .ts  
 
 ## Prerequisite 　
-[ESP8266Audio](https://github.com/earlephilhower/ESP8266Audio)  
-This program is not adaptable to the latest version of ESP8266Audio.  
-Use [ESP8266Audio release 1.9.3](https://github.com/earlephilhower/ESP8266Audio/releases/tag/1.9.3).  
+### [ESP8266Audio](https://github.com/earlephilhower/ESP8266Audio)  
+Confirmed to work with [ESP8266Audio release 1.9.5](https://github.com/earlephilhower/ESP8266Audio/releases/tag/1.9.5).  
 
 In addition, you need to add a code like the following.  
 
-### AudioFileSourceHTTPStream.cpp  
+#### AudioFileSourceHTTPStream.cpp  
 ```
 bool AudioFileSourceHTTPStream::close()
 {
