@@ -25,6 +25,7 @@
 #include "libhelix-aac/aacdec.h"
 
 #define TS_PACKET_SIZE 188
+#define TS_HEADER_SIZE 4
 #define PID_ARRAY_LEN 4
 typedef struct
 {

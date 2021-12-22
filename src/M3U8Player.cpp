@@ -90,7 +90,7 @@ void M3U8Player::scrapeAAC(void* m3u8PlayerInstance)
       instance->scrapeM3U8();
     if (millis() - lastRequested >= instance->targetDuration * KILO)
     {
-      log_e("playAAC Stack: %d", uxTaskGetStackHighWaterMark(instance->playAACHandle));
+      log_i("playAAC Stack: %d", uxTaskGetStackHighWaterMark(instance->playAACHandle));
       while(!instance->m3u8Urls.depth()){ delay(100); }
       res = getRequest(instance->m3u8Urls.peek());
       status = parseResponse(res, instance->targetDuration, instance->m3u8Urls, instance->aacUrls);
@@ -173,7 +173,7 @@ void M3U8Player::playAAC(void *m3u8PlayerInstance)
         isNextBuffPrepared = false;
         instance->ts->reset();
         instance->ts->switchMode(instance->buff.isTS);
-        log_e("scrapeAAC Stack: %d", uxTaskGetStackHighWaterMark(instance->scrapeAACHandle));
+        log_i("scrapeAAC Stack: %d", uxTaskGetStackHighWaterMark(instance->scrapeAACHandle));
       }
       delay(1);
     }

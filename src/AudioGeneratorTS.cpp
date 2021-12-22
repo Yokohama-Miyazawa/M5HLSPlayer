@@ -291,9 +291,8 @@ int AudioGeneratorTS::parsePacket(uint8_t *packet, uint8_t *data)
 
 uint32_t AudioGeneratorTS::readFile(void *data, uint32_t len)
 {
-  // Shorten len to multiples of the length of an mpeg2-ts packet.
-  len -= len % TS_PACKET_SIZE;
-  if(len == 0 || len < TS_PACKET_SIZE) { return 0; }
+  // If len is too short, return 0
+  if(len < (TS_PACKET_SIZE - TS_HEADER_SIZE)) { return 0; }
 
   int read;
   int aacRead = 0;
@@ -311,7 +310,7 @@ uint32_t AudioGeneratorTS::readFile(void *data, uint32_t len)
       read = file->read(packetBuff, TS_PACKET_SIZE);
     }
     if(read){ aacRead += parsePacket(packetBuff, &reinterpret_cast<uint8_t*>(data)[aacRead]); }
-  } while ((len - aacRead) >= TS_PACKET_SIZE && read);
+  } while ((len - aacRead) >= (TS_PACKET_SIZE - TS_HEADER_SIZE) && read);
 
   showBinary(reinterpret_cast<uint8_t*>(data), aacRead, "# READFILE #");
 
