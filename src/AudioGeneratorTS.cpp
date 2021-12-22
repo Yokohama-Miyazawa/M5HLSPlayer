@@ -378,7 +378,12 @@ bool AudioGeneratorTS::loop()
     // buff[0] start of frame, decode it...
     unsigned char *inBuff = reinterpret_cast<unsigned char *>(buff);
     int bytesLeft = buffValid;
-    log_v("bytesLeft: %d", bytesLeft);
+    Serial.printf("bytesLeft: %d\n", bytesLeft);
+    if(bytesLeft < 500) log_e("bytesLeft: %d", bytesLeft);
+    if(bytesLeft < (TS_PACKET_SIZE - TS_HEADER_SIZE)){ // omit too small data
+      running = false;
+      goto done;
+    }
     log_v("AACDecode will be called.");
     int ret = AACDecode(hAACDecoder, &inBuff, &bytesLeft, outSample);
     log_v("ret: %d", ret);
