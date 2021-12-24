@@ -61,10 +61,15 @@ M3U8Player::~M3U8Player(){
 void M3U8Player::scrapeAAC(void* m3u8PlayerInstance)
 {
   M3U8Player* instance = (M3U8Player*) m3u8PlayerInstance;
-  uint32_t lastRequested = millis();
+  uint32_t lastRequested = 0;
 
   while (true)
   {
+    if (!instance->isPlaying) {
+      log_e("Not Playing Now...");
+      delay(100);
+      continue;
+    }
     if (millis() - lastRequested >= instance->targetDuration * KILO)
     {
       log_i("playAAC Stack: %d", uxTaskGetStackHighWaterMark(instance->playAACHandle));

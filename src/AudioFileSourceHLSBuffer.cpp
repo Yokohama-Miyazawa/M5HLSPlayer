@@ -110,14 +110,19 @@ bool AudioFileSourceHLSBuffer::isFullSourceQueue()
 void AudioFileSourceHLSBuffer::addSource(AudioFileSource *src)
 {
   sourceQueue.push(src);
+  log_e("A File Source is Added.");
   return;
 }
 
 bool AudioFileSourceHLSBuffer::changeSource()
 {
-  if(sourceQueue.length() == 0) return false;
+  if(sourceQueue.length() == 0){
+    log_e("Source Queue is Empty.");
+    return false;
+  }
   delete src;
   src = sourceQueue.pop();
+  log_e("Source Changed.");
   return true;
 }
 
