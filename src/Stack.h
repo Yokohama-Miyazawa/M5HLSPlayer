@@ -1,3 +1,4 @@
+#pragma once
 #include <Arduino.h>
 #define STACKSIZE 8
 
