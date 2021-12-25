@@ -320,6 +320,7 @@ uint32_t AudioGeneratorTS::readFile(void *data, uint32_t len)
 
 bool AudioGeneratorTS::FillBufferWithValidFrame()
 {
+  //log_e("FillBuffer is called.");
   buff[0] = 0; // Destroy any existing sync word @ 0
   int nextSync;
   do {
@@ -341,22 +342,22 @@ bool AudioGeneratorTS::FillBufferWithValidFrame()
       }
     }
   } while (nextSync == -1);
-
+  //log_e("nextSync:%d", nextSync);
   // Move the frame to start at offset 0 in the buffer
   buffValid -= nextSync; // Throw out prior to nextSync
   memmove(buff, buff+nextSync, buffValid);
-
+  log_i("buffValid:%d", buffValid);
   // We have a sync word at 0 now, try and fill remainder of buffer
   //buffValid += file->read(buff + buffValid, buffLen - buffValid);
   buffValid += isInputTs ? readFile(buff + buffValid, buffLen - buffValid) : file->read(buff + buffValid, buffLen - buffValid);
-  log_v("buffValid: %d", buffValid);
+  log_i("buffValid: %d", buffValid);
 
   return true;
 }
 
 bool AudioGeneratorTS::loop()
 {
-  log_d("AudioGeneratorTS::loop() is called.");
+  //log_e("AudioGeneratorTS::loop() is called.");
   if (!running) goto done; // Nothing to do here!
 
   // If we've got data, try and pump it out...

@@ -47,6 +47,7 @@ class AudioFileSourceHLSBuffer : public AudioFileSource
     void addSource(AudioFileSource *src);
     bool isTS();
     bool isFullSourceQueue();
+    uint8_t getLengthSourceQueue();
 
   private:
     virtual void fill();
@@ -54,7 +55,7 @@ class AudioFileSourceHLSBuffer : public AudioFileSource
 
   private:
     AudioFileSource *src;
-    Queue<AudioFileSource*> sourceQueue;
+    Queue<AudioFileSource*> *sourceQueue;
     uint32_t buffSize;
     uint8_t *buffer;
     bool deallocateBuffer;

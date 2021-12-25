@@ -31,10 +31,14 @@ AudioFileSourceHLSBuffer::AudioFileSourceHLSBuffer(AudioFileSource *source, uint
   deallocateBuffer = true;
   writePtr = 0;
   readPtr = 0;
-  src = source;
+  src = NULL;
   length = 0;
   filled = false;
   isTSBuffer = isTSData;
+  sourceQueue = new Queue<AudioFileSource*>;
+  
+  addSource(source);
+  changeSource();  
 }
 
 AudioFileSourceHLSBuffer::AudioFileSourceHLSBuffer(AudioFileSource *source, void *inBuff, uint32_t buffSizeBytes, bool isTSData)
@@ -44,16 +48,21 @@ AudioFileSourceHLSBuffer::AudioFileSourceHLSBuffer(AudioFileSource *source, void
   deallocateBuffer = false;
   writePtr = 0;
   readPtr = 0;
-  src = source;
+  src = NULL;
   length = 0;
   filled = false;
   isTSBuffer = isTSData;
+  sourceQueue = new Queue<AudioFileSource*>;
+
+  addSource(source);
+  changeSource();
 }
 
 AudioFileSourceHLSBuffer::~AudioFileSourceHLSBuffer()
 {
   if (deallocateBuffer) free(buffer);
   buffer = NULL;
+  delete sourceQueue;
 }
 
 bool AudioFileSourceHLSBuffer::seek(int32_t pos, int dir)
@@ -104,31 +113,44 @@ bool AudioFileSourceHLSBuffer::isTS()
 
 bool AudioFileSourceHLSBuffer::isFullSourceQueue()
 {
-  return sourceQueue.length() >= QUEUESIZE;
+  log_e("isFullSourceQueue is called.");
+  return sourceQueue->length() >= QUEUESIZE;
 }
 
-void AudioFileSourceHLSBuffer::addSource(AudioFileSource *src)
+uint8_t AudioFileSourceHLSBuffer::getLengthSourceQueue()
 {
-  sourceQueue.push(src);
-  log_e("A File Source is Added.");
+  return sourceQueue->length();
+}
+
+void AudioFileSourceHLSBuffer::addSource(AudioFileSource *source)
+{
+  sourceQueue->push(source);
+  log_e("A File Source is Added. len:%d", sourceQueue->length());
   return;
 }
 
 bool AudioFileSourceHLSBuffer::changeSource()
 {
-  if(sourceQueue.length() == 0){
+  if(sourceQueue->length() == 0){
     log_e("Source Queue is Empty.");
     return false;
   }
-  delete src;
-  src = sourceQueue.pop();
-  log_e("Source Changed.");
+  if(src == NULL) {
+    src = sourceQueue->pop();
+  } else{
+    AudioFileSource *oldSrc = src;
+    src = sourceQueue->pop();
+    oldSrc->close();
+    delete oldSrc;
+  }
+  log_e("Source Changed. len:%d", sourceQueue->length());
   return true;
 }
 
 uint32_t AudioFileSourceHLSBuffer::read(void *data, uint32_t len)
 {
   if (!buffer) return src->read(data, len);
+  if(getSize() <= getPos()) changeSource();
 
   uint32_t bytes = 0;
   if (!filled) {
@@ -181,6 +203,7 @@ uint32_t AudioFileSourceHLSBuffer::read(void *data, uint32_t len)
 void AudioFileSourceHLSBuffer::fill()
 {
   if (!buffer) return;
+  if(getSize() <= getPos()) changeSource();
 
   if (length < buffSize) {
     // Now try and opportunistically fill the buffer
@@ -188,7 +211,7 @@ void AudioFileSourceHLSBuffer::fill()
       if (readPtr == writePtr+1) return;
       uint32_t bytesAvailMid = readPtr - writePtr - 1;
       int cnt = src->readNonBlock(&buffer[writePtr], bytesAvailMid);
-      if(cnt == 0 && changeSource()) cnt = src->readNonBlock(&buffer[writePtr], bytesAvailMid);
+      log_e("cnt:%d size:%d pos:%d bytesAvailMid:%d", cnt, getSize(), getPos(), bytesAvailMid);
       length += cnt;
       writePtr = (writePtr + cnt) % buffSize;
       return;
@@ -197,7 +220,7 @@ void AudioFileSourceHLSBuffer::fill()
     if (buffSize > writePtr) {
       uint32_t bytesAvailEnd = buffSize - writePtr;
       int cnt = src->readNonBlock(&buffer[writePtr], bytesAvailEnd);
-      if(cnt == 0 && changeSource()) cnt = src->readNonBlock(&buffer[writePtr], bytesAvailEnd);
+      log_e("cnt:%d size:%d pos:%d bytesAvailEnd:%d", cnt, getSize(), getPos(), bytesAvailEnd);
       length += cnt;
       writePtr = (writePtr + cnt) % buffSize;
       if (cnt != (int)bytesAvailEnd) return;
@@ -206,7 +229,7 @@ void AudioFileSourceHLSBuffer::fill()
     if (readPtr > 1) {
       uint32_t bytesAvailStart = readPtr - 1;
       int cnt = src->readNonBlock(&buffer[writePtr], bytesAvailStart);
-      if(cnt == 0 && changeSource()) cnt = src->readNonBlock(&buffer[writePtr], bytesAvailStart);
+      log_e("cnt:%d size:%d pos:%d bytesAvailStart:%d", cnt, getSize(), getPos(), bytesAvailStart);
       length += cnt;
       writePtr = (writePtr + cnt) % buffSize;
     }
