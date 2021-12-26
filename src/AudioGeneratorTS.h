@@ -25,6 +25,7 @@
 #include "libhelix-aac/aacdec.h"
 
 #define TS_PACKET_SIZE 188
+#define TS_HEADER_SIZE 4
 #define PID_ARRAY_LEN 4
 typedef struct
 {
@@ -69,7 +70,7 @@ class AudioGeneratorTS : public AudioGenerator
     void showBinary(uint8_t *data, int len, String comment);
     bool isSyncByteFound;
     pid_array pidsOfPMT;
-    pid_array pidsOfAAC;
+    int16_t pidOfAAC;
     int16_t pesDataLength;
 
     // Mode switching (Mpeg2-ts or aac)
