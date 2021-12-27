@@ -64,6 +64,11 @@ AudioFileSourceHLSBuffer::~AudioFileSourceHLSBuffer()
 {
   if (deallocateBuffer) free(buffer);
   buffer = NULL;
+  while(sourceQueue->length()){
+    AudioFileSource *src = sourceQueue->pop();
+    src->close();
+    delete src;
+  }
   delete sourceQueue;
 }
 
@@ -220,7 +225,7 @@ void AudioFileSourceHLSBuffer::fill()
       int cnt = src->readNonBlock(&buffer[writePtr], bytesAvailMid);
       int debugSize = getSize();
       int debugPos = getPos();
-      if(debugPos < 300 || debugSize == debugPos) log_e("cnt:%d size:%d pos:%d bytesAvailMid:%d", cnt, debugSize, debugPos, bytesAvailMid);
+      if(debugPos < 300 || (debugSize - debugPos) < 300) log_e("cnt:%d size:%d pos:%d bytesAvailMid:%d", cnt, debugSize, debugPos, bytesAvailMid);
       length += cnt;
       writePtr = (writePtr + cnt) % buffSize;
       return;
@@ -231,7 +236,7 @@ void AudioFileSourceHLSBuffer::fill()
       int cnt = src->readNonBlock(&buffer[writePtr], bytesAvailEnd);
       int debugSize = getSize();
       int debugPos = getPos();
-      if(debugPos < 300 || debugSize == debugPos) log_e("cnt:%d size:%d pos:%d bytesAvailEnd:%d", cnt, debugSize, debugPos, bytesAvailEnd);
+      if(debugPos < 300 || (debugSize - debugPos) < 300) log_e("cnt:%d size:%d pos:%d bytesAvailEnd:%d", cnt, debugSize, debugPos, bytesAvailEnd);
       length += cnt;
       writePtr = (writePtr + cnt) % buffSize;
       if (cnt != (int)bytesAvailEnd) return;
@@ -242,7 +247,7 @@ void AudioFileSourceHLSBuffer::fill()
       int cnt = src->readNonBlock(&buffer[writePtr], bytesAvailStart);
       int debugSize = getSize();
       int debugPos = getPos();
-      if(debugPos < 300 || debugSize == debugPos) log_e("cnt:%d size:%d pos:%d bytesAvailStart:%d", cnt, debugSize, debugPos, bytesAvailStart);
+      if(debugPos < 300 || (debugSize - debugPos) < 300) log_e("cnt:%d size:%d pos:%d bytesAvailStart:%d", cnt, debugSize, debugPos, bytesAvailStart);
       length += cnt;
       writePtr = (writePtr + cnt) % buffSize;
     }
