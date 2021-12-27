@@ -4,7 +4,6 @@ HLSUrl::HLSUrl(String url)
 {
   targetDuration = 10;
   searchPlaylistUrl(url);
-  log_e("HLSUrl Created.");
 }
 
 HLSUrl::~HLSUrl()

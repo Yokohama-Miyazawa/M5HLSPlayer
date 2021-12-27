@@ -49,7 +49,7 @@ M3U8Player::M3U8Player(String url, const float &startVolume)
 
   delay(1000);
   xTaskCreatePinnedToCore(this->scrapeAAC, "scrapeAAC", 2048 * 3, this, 0, &scrapeAACHandle, 0);
-  xTaskCreatePinnedToCore(this->playAAC,   "playAAC",   2048 * 16, this, 2, &playAACHandle,   1);
+  xTaskCreatePinnedToCore(this->playAAC,   "playAAC",   2048 * 4, this, 2, &playAACHandle,   1);
 
   targetDuration = urls->getTargetDuration();
 }
@@ -72,20 +72,20 @@ void M3U8Player::scrapeAAC(void* m3u8PlayerInstance)
   while (true)
   {
     if (!instance->isPlaying) {
-      log_e("Not Playing Now...");
+      log_i("Not Playing Now...");
       delay(100);
       continue;
     }
     if (instance->buff && (millis() - lastRequested >= instance->targetDuration * KILO))
     {
-      log_i("playAAC Stack: %d", uxTaskGetStackHighWaterMark(instance->playAACHandle));
+      log_e("playAAC Stack: %d", uxTaskGetStackHighWaterMark(instance->playAACHandle));
       instance->urls->crawlSegmentUrl();
       lastRequested = millis();
 
-      while (instance->urls->length() && !instance->buff->isFullSourceQueue() && (instance->buff->getLengthSourceQueue() < 3))
+      while (instance->urls->length() && !instance->buff->isFullSourceQueue())
       {
         String convertedUrl = convertHTTPStoHTTP(instance->urls->pop());
-        log_i("%s", convertedUrl.c_str());
+        log_e("%s", convertedUrl.c_str());
         AudioFileSourceHTTPStream *file = new AudioFileSourceHTTPStream(convertedUrl.c_str());
         instance->buff->addSource(file);
       }
