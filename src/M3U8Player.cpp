@@ -76,6 +76,12 @@ void M3U8Player::scrapeAAC(void* m3u8PlayerInstance)
       delay(100);
       continue;
     }
+    if (instance->isChannelChanged) {
+      log_e("Now channel changing...");
+      lastRequested = 0;
+      delay(100);
+      continue;
+    }
     if (instance->buff && (millis() - lastRequested >= instance->targetDuration * KILO))
     {
       log_e("playAAC Stack: %d", uxTaskGetStackHighWaterMark(instance->playAACHandle));
@@ -97,7 +103,7 @@ void M3U8Player::scrapeAAC(void* m3u8PlayerInstance)
 void M3U8Player::setBuffer(HLSUrl* urlForBuff)
 {
   String convertedUrl = convertHTTPStoHTTP(urlForBuff->pop());
-  log_i("%s", convertedUrl.c_str());
+  log_e("Making a buffer for %s", convertedUrl.c_str());
   AudioFileSourceHTTPStream *file = new AudioFileSourceHTTPStream(convertedUrl.c_str());
   bool isTS = (convertedUrl.indexOf(".ts") >= 0) ? true : false;
   log_e("isTS:%d", isTS);
@@ -138,14 +144,14 @@ void M3U8Player::playAAC(void *m3u8PlayerInstance)
         instance->ts->stop();
         instance->buff->close();
         delete instance->buff;
-        delete instance->urls;
+        //delete instance->urls;
         Serial.println("End of Play");
         instance->isPlaying = false;
         goto restart;
       }
       if (instance->isChannelChanged && instance->nextBuff && instance->nextBuff->isSetup())
       {
-        Serial.println("Change Channel");
+        log_e("Change Channel");
         instance->ts->stop();
         instance->buff->close();
         delete instance->buff;
@@ -157,6 +163,7 @@ void M3U8Player::playAAC(void *m3u8PlayerInstance)
         instance->nextBuff = NULL;
         instance->nextUrls = NULL;
         instance->isChannelChanged = false;
+        log_e("Changing channel completed.");
         break;
       }
       delay(1);
