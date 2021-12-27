@@ -1,12 +1,24 @@
+#pragma once
 #include <Arduino.h>
-#define QUEUESIZE 16
+#define DEFAULT_QUEUE_CAPACITY 15
 
 template <class T>
 class Queue {
-    static const int size = QUEUESIZE;
-    static const int capacity = size - 1;
 public:
     Queue(){
+        capacity = DEFAULT_QUEUE_CAPACITY;
+        size = capacity + 1;
+        head = 0;
+        tail = capacity;
+        data = new T[size];
+    }
+    Queue(int capa){
+        if(capa < 2) {
+            Serial.println("The specified size is too small.");
+            exit(1);
+        }
+        capacity = capa;
+        size = capacity + 1;
         head = 0;
         tail = capacity;
         data = new T[size];
@@ -59,6 +71,8 @@ public:
         tail = (head + leftNumber - 1) % size;
     }
 private:
+    int size;
+    int capacity;
     int head;
     int tail;
     T *data;
