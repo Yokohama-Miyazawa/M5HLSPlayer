@@ -38,7 +38,8 @@ AudioFileSourceHLSBuffer::AudioFileSourceHLSBuffer(AudioFileSource *source, uint
   sourceQueue = new Queue<AudioFileSource*>(SOURCE_QUEUE_CAPACITY);
   
   addSource(source);
-  changeSource();  
+  changeSource();
+  isSetupCompleted = true;
 }
 
 AudioFileSourceHLSBuffer::AudioFileSourceHLSBuffer(AudioFileSource *source, void *inBuff, uint32_t buffSizeBytes, bool isTSData)
@@ -56,6 +57,7 @@ AudioFileSourceHLSBuffer::AudioFileSourceHLSBuffer(AudioFileSource *source, void
 
   addSource(source);
   changeSource();
+  isSetupCompleted = true;
 }
 
 AudioFileSourceHLSBuffer::~AudioFileSourceHLSBuffer()
@@ -109,6 +111,11 @@ uint32_t AudioFileSourceHLSBuffer::getFillLevel()
 bool AudioFileSourceHLSBuffer::isTS()
 {
   return isTSBuffer;
+}
+
+bool AudioFileSourceHLSBuffer::isSetup()
+{
+  return isSetupCompleted;
 }
 
 bool AudioFileSourceHLSBuffer::isFullSourceQueue()

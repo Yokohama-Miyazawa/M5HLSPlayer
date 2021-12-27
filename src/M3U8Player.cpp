@@ -143,7 +143,7 @@ void M3U8Player::playAAC(void *m3u8PlayerInstance)
         instance->isPlaying = false;
         goto restart;
       }
-      if (instance->isChannelChanged && instance->nextBuff)
+      if (instance->isChannelChanged && instance->nextBuff && instance->nextBuff->isSetup())
       {
         Serial.println("Change Channel");
         instance->ts->stop();
@@ -152,6 +152,8 @@ void M3U8Player::playAAC(void *m3u8PlayerInstance)
         delete instance->urls;
         instance->buff = instance->nextBuff;
         instance->urls = instance->nextUrls;
+        instance->ts->reset();
+        instance->ts->switchMode(instance->buff->isTS());
         instance->nextBuff = NULL;
         instance->nextUrls = NULL;
         instance->isChannelChanged = false;

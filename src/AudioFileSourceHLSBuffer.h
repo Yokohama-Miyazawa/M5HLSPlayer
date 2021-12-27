@@ -24,7 +24,7 @@
 #include <AudioFileSource.h>
 #include "Queue.h"
 
-#define SOURCE_QUEUE_CAPACITY 2
+#define SOURCE_QUEUE_CAPACITY 3
 #define FILE_SIZE_LIMIT 1000000  // If a source size exceed it, some problem may have occurred.
 
 class AudioFileSourceHLSBuffer : public AudioFileSource
@@ -46,6 +46,7 @@ class AudioFileSourceHLSBuffer : public AudioFileSource
 
     enum { STATUS_FILLING=2, STATUS_UNDERFLOW };
 
+    bool isSetup();
     void addSource(AudioFileSource *src);
     bool isTS();
     bool isFullSourceQueue();
@@ -65,6 +66,7 @@ class AudioFileSourceHLSBuffer : public AudioFileSource
     uint32_t length;
     bool filled;
     bool isTSBuffer;
+    bool isSetupCompleted = false;
 };
 
 
