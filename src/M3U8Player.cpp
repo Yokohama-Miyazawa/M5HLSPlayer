@@ -90,7 +90,7 @@ void M3U8Player::scrapeAAC(void* m3u8PlayerInstance)
 
       while (instance->urls->length() && !instance->buff->isFullSourceQueue())
       {
-        String convertedUrl = convertHTTPStoHTTP(instance->urls->pop());
+        String convertedUrl = convertHTTPStoHTTP(instance->urls->next());
         log_e("%s", convertedUrl.c_str());
         AudioFileSourceHTTPStream *file = new AudioFileSourceHTTPStream(convertedUrl.c_str());
         instance->buff->addSource(file);
@@ -103,7 +103,7 @@ void M3U8Player::scrapeAAC(void* m3u8PlayerInstance)
 void M3U8Player::setBuffer(HLSUrl* urlForBuff)
 {
   while(!urlForBuff->length()) delay(100);
-  String convertedUrl = convertHTTPStoHTTP(urlForBuff->pop());
+  String convertedUrl = convertHTTPStoHTTP(urlForBuff->next());
   log_e("Making a buffer for %s", convertedUrl.c_str());
   AudioFileSourceHTTPStream *file = new AudioFileSourceHTTPStream(convertedUrl.c_str());
   bool isTS = (convertedUrl.indexOf(".ts") >= 0) ? true : false;

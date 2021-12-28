@@ -83,7 +83,7 @@ String getRequest(const String &url)
   return response;
 }
 
-int parseResponse(const String &res, uint8_t &duration, Stack<String> &m3u8Urls, Queue<String> &aacUrls)
+int parseResponse(const String &res, uint8_t &duration, Stack<String> &m3u8Urls, IndexQueue<String> &aacUrls)
 {
   uint8_t status = 0; // found .acc: 1, found .m3u8: 2, others: 0
   int32_t length = res.length();

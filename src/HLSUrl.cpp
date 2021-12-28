@@ -45,7 +45,7 @@ int HLSUrl::length()
   return segmentUrls.length();
 }
 
-String HLSUrl::pop()
+String HLSUrl::next()
 {
-  return segmentUrls.pop();
+  return segmentUrls.next();
 }
