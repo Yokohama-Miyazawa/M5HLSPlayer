@@ -6,6 +6,7 @@ public:
   HLSUrl(String url);
   ~HLSUrl();
   int length();
+  int margin();
   String next();
   bool crawlSegmentUrl();
   uint8_t getTargetDuration();

@@ -36,6 +36,13 @@ public:
     index = (index + 1) % this->size;
     return this->data[index];
   }
+  int margin(){
+    if(index <= this->tail) {
+      return this->tail - index;
+    } else {
+      return this->size - index + this->tail;
+    }
+  }
 protected:
   int index;
 };
