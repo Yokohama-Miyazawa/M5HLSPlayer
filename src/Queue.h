@@ -26,7 +26,7 @@ public:
     ~Queue(){
         delete[] data;
     }
-    void push(const T &element){
+    virtual void push(const T &element){
         if(length() == capacity) {
             Serial.println("This Queue is already full.");
             return;
@@ -34,7 +34,7 @@ public:
         tail = (tail + 1) % size;
         data[tail] = element;
     }
-    T pop(){
+    virtual T pop(){
         if(length() == 0) {
             Serial.println("This Queue is already empty.");
             exit(1);
@@ -70,7 +70,7 @@ public:
         if(leftNumber <= 0) { return; }
         tail = (head + leftNumber - 1) % size;
     }
-private:
+protected:
     int size;
     int capacity;
     int head;
