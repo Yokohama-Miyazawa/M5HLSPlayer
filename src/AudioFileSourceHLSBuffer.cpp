@@ -125,7 +125,6 @@ bool AudioFileSourceHLSBuffer::isSetup()
 
 bool AudioFileSourceHLSBuffer::isFullSourceQueue()
 {
-  log_e("isFullSourceQueue is called. %d", sourceQueue->length() >= SOURCE_QUEUE_CAPACITY);
   return sourceQueue->length() >= SOURCE_QUEUE_CAPACITY;
 }
 
