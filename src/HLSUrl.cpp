@@ -31,7 +31,7 @@ bool HLSUrl::crawlSegmentUrl()
   if(!m3u8Urls.depth()) return false;
   String res = getRequest(playlistUrl);
   uint8_t status = parseResponse(res, targetDuration, m3u8Urls, segmentUrls);
-  if(status == 0) return false;
+  if(status != 1) return false;
   return true;
 }
 
