@@ -5,7 +5,6 @@ M5StackおよびM5StickCでM3U8形式のWebラジオを再生するプログラ�
 
 ## 前提ライブラリ  
 ### [ESP8266Audio](https://github.com/earlephilhower/ESP8266Audio)  
-[ESP8266Audio Release 1.9.5](https://github.com/earlephilhower/ESP8266Audio/releases/tag/1.9.5)で動作確認済。  
 また、下記の通りコードを追加する必要あり。  
 
 #### AudioFileSourceHTTPStream.cpp  

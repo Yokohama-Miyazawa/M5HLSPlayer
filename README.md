@@ -5,7 +5,6 @@ Support for .aac and .ts
 
 ## Prerequisite 　
 ### [ESP8266Audio](https://github.com/earlephilhower/ESP8266Audio)  
-Confirmed to work with [ESP8266Audio release 1.9.5](https://github.com/earlephilhower/ESP8266Audio/releases/tag/1.9.5).  
 
 In addition, you need to add a code like the following.  
 
