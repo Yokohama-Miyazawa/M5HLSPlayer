@@ -85,8 +85,7 @@ void M3U8Player::scrapeAAC(void* m3u8PlayerInstance)
     if (instance->buff && (millis() - lastRequested >= instance->targetDuration * KILO))
     {
       log_e("playAAC Stack: %d", uxTaskGetStackHighWaterMark(instance->playAACHandle));
-      instance->urls->crawlSegmentUrl();
-      lastRequested = millis();
+      if(instance->urls->crawlSegmentUrl()) lastRequested = millis();
 
       while (instance->urls->margin() && !instance->buff->isFullSourceQueue())
       {
@@ -159,6 +158,7 @@ void M3U8Player::playAAC(void *m3u8PlayerInstance)
         delete instance->urls;
         instance->buff = instance->nextBuff;
         instance->urls = instance->nextUrls;
+        instance->targetDuration = instance->urls->getTargetDuration();
         instance->ts->reset();
         instance->ts->switchMode(instance->buff->isTS());
         instance->nextBuff = NULL;
