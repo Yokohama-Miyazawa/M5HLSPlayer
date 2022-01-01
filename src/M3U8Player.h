@@ -12,16 +12,15 @@ public:
   M3U8Player(String url);
   M3U8Player(String url, const float &startVolume);
   ~M3U8Player();
-  String stationUrl;
-  float volume;
   bool start();
   void setVolume(const float &newVolume);
   float getVolume();
   bool changeStationURL(const String &url);
   String getStationURL();
 private:
+  String stationUrl;
+  float volume;
   TaskHandle_t scrapeAACHandle;
-  TaskHandle_t setBufferHandle;
   TaskHandle_t playAACHandle;
   AudioGeneratorTS *ts;
   AudioFileSourceHLSBuffer* buff;
@@ -29,9 +28,10 @@ private:
   AudioOutputI2S *out;
   uint32_t buffSize;
   uint8_t targetDuration;
-  HLSUrl* urls;  
-  HLSUrl* nextUrls;  
-  bool isChannelChanged;
+  HLSUrl* urls;
+  HLSUrl* nextUrls;
+  bool isReferringUrls;
+  bool isChannelChanging;
   bool isPlaying;
   void setBuffer(HLSUrl* url);
   static void scrapeAAC(void *args);
