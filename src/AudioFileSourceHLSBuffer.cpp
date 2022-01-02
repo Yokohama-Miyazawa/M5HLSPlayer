@@ -125,7 +125,7 @@ bool AudioFileSourceHLSBuffer::isSetup()
 
 bool AudioFileSourceHLSBuffer::isFullSourceQueue()
 {
-  return !isSetup() && sourceQueue->length() >= SOURCE_QUEUE_CAPACITY;
+  return !isSetup() || sourceQueue->length() >= SOURCE_QUEUE_CAPACITY;
 }
 
 void AudioFileSourceHLSBuffer::addSource(AudioFileSource *source)
