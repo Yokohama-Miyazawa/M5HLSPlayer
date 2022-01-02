@@ -11,7 +11,6 @@ public:
   bool crawlSegmentUrl();
   uint8_t getTargetDuration();
 private:
-  String playlistUrl;
   uint8_t targetDuration;
   IndexQueue<String> *segmentUrls;
   Stack<String> *m3u8Urls;

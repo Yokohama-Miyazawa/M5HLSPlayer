@@ -88,7 +88,7 @@ void M3U8Player::scrapeAAC(void* m3u8PlayerInstance)
       if(instance->urls->crawlSegmentUrl()) lastRequested = millis();
       instance->isReferringUrls = false;
     }
-    while (instance->buff && !instance->buff->isFullSourceQueue() && instance->urls->margin())
+    while (instance->buff->isSetup() && !instance->buff->isFullSourceQueue() && instance->urls->margin())
     {
       instance->isReferringUrls = true;
       String convertedUrl = convertHTTPStoHTTP(instance->urls->next());
