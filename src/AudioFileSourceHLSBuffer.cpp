@@ -22,6 +22,9 @@
 #include "AudioFileSourceHLSBuffer.h"
 
 #pragma GCC optimize ("O3")
+#define COUNT_THRESHOLD 500
+#define DEBUGPOS_THRESHOLD 1536
+#define BYTESAVAIL_THRESHOLD 1024
 
 AudioFileSourceHLSBuffer::AudioFileSourceHLSBuffer(AudioFileSource *source, uint32_t buffSizeBytes, bool isTSData)
 {
@@ -68,6 +71,7 @@ AudioFileSourceHLSBuffer::~AudioFileSourceHLSBuffer()
     AudioFileSource *src = sourceQueue->pop();
     src->close();
     delete src;
+    log_e("one source deleted");
   }
   delete sourceQueue;
 }
@@ -154,7 +158,7 @@ bool AudioFileSourceHLSBuffer::changeSource()
     oldSrc->close();
     delete oldSrc;
   }
-  log_e("Source Changed. len:%d", sourceQueue->length());
+  log_e("Source Changed. size:%d queue length:%d", src->getSize(), sourceQueue->length());
   return true;
 }
 
@@ -221,10 +225,13 @@ void AudioFileSourceHLSBuffer::fill()
     if (readPtr > writePtr) {
       if (readPtr == writePtr+1) return;
       uint32_t bytesAvailMid = readPtr - writePtr - 1;
+      if(bytesAvailMid >= BYTESAVAIL_THRESHOLD)
+        log_e("bytesAvailMid:%04d readPtr:%04d writePtr:%04d buffSize:%04d", bytesAvailMid, readPtr, writePtr, buffSize);
       int cnt = src->readNonBlock(&buffer[writePtr], bytesAvailMid);
       int debugSize = getSize();
       int debugPos = getPos();
-      if(debugPos < 300 || (debugSize - debugPos) < 300) log_e("cnt:%d size:%d pos:%d bytesAvailMid:%d", cnt, debugSize, debugPos, bytesAvailMid);
+      if(debugPos < DEBUGPOS_THRESHOLD || (debugSize - debugPos) < DEBUGPOS_THRESHOLD || cnt > COUNT_THRESHOLD)
+        log_e("cnt:%d size:%d pos:%d bytesAvailMid:%d", cnt, debugSize, debugPos, bytesAvailMid);
       length += cnt;
       writePtr = (writePtr + cnt) % buffSize;
       return;
@@ -232,10 +239,13 @@ void AudioFileSourceHLSBuffer::fill()
 
     if (buffSize > writePtr) {
       uint32_t bytesAvailEnd = buffSize - writePtr;
+      if(bytesAvailEnd >= BYTESAVAIL_THRESHOLD)
+        log_e("bytesAvailEnd:%04d readPtr:%04d writePtr:%04d buffSize:%04d", bytesAvailEnd, readPtr, writePtr, buffSize);
       int cnt = src->readNonBlock(&buffer[writePtr], bytesAvailEnd);
       int debugSize = getSize();
       int debugPos = getPos();
-      if(debugPos < 300 || (debugSize - debugPos) < 300) log_e("cnt:%d size:%d pos:%d bytesAvailEnd:%d", cnt, debugSize, debugPos, bytesAvailEnd);
+      if(debugPos < DEBUGPOS_THRESHOLD || (debugSize - debugPos) < DEBUGPOS_THRESHOLD || cnt > COUNT_THRESHOLD)
+        log_e("cnt:%d size:%d pos:%d bytesAvailEnd:%d", cnt, debugSize, debugPos, bytesAvailEnd);
       length += cnt;
       writePtr = (writePtr + cnt) % buffSize;
       if (cnt != (int)bytesAvailEnd) return;
@@ -243,10 +253,13 @@ void AudioFileSourceHLSBuffer::fill()
 
     if (readPtr > 1) {
       uint32_t bytesAvailStart = readPtr - 1;
+      if(bytesAvailStart >= BYTESAVAIL_THRESHOLD)
+        log_e("bytesAvailSta:%04d readPtr:%04d writePtr:%04d buffSize:%04d", bytesAvailStart, readPtr, writePtr, buffSize);
       int cnt = src->readNonBlock(&buffer[writePtr], bytesAvailStart);
       int debugSize = getSize();
       int debugPos = getPos();
-      if(debugPos < 300 || (debugSize - debugPos) < 300) log_e("cnt:%d size:%d pos:%d bytesAvailStart:%d", cnt, debugSize, debugPos, bytesAvailStart);
+      if(debugPos < DEBUGPOS_THRESHOLD || (debugSize - debugPos) < DEBUGPOS_THRESHOLD || cnt > COUNT_THRESHOLD)
+        log_e("cnt:%d size:%d pos:%d bytesAvailStart:%d", cnt, debugSize, debugPos, bytesAvailStart);
       length += cnt;
       writePtr = (writePtr + cnt) % buffSize;
     }

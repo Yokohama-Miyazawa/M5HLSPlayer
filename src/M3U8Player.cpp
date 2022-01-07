@@ -108,7 +108,7 @@ void M3U8Player::setBuffer(HLSUrl* urlForBuff)
   log_e("Making a buffer for %s", convertedUrl.c_str());
   AudioFileSourceHTTPStream *file = new AudioFileSourceHTTPStream(convertedUrl.c_str());
   bool isTS = (convertedUrl.indexOf(".ts") >= 0) ? true : false;
-  log_e("isTS:%d", isTS);
+  log_e("isTS: %s", isTS ? "true" : "false");
   nextBuff = new AudioFileSourceHLSBuffer(file, buffSize, isTS);
   log_e("setBuffer Complete.");
 }
@@ -160,6 +160,7 @@ void M3U8Player::playAAC(void *m3u8PlayerInstance)
         instance->buff = instance->nextBuff;
         instance->urls = instance->nextUrls;
         instance->targetDuration = instance->urls->getTargetDuration();
+        log_e("Target Duration: %d", instance->targetDuration);
         instance->ts->reset();
         instance->ts->switchMode(instance->buff->isTS());
         instance->nextBuff = NULL;
