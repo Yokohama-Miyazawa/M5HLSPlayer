@@ -171,7 +171,7 @@ uint32_t AudioFileSourceHLSBuffer::read(void *data, uint32_t len)
   if (!filled) {
     // Fill up completely before returning any data at all
     cb.st(STATUS_FILLING, PSTR("Refilling buffer"));
-    length = src->read(buffer, buffSize);
+    length += src->read(buffer, buffSize - length);
     writePtr = length % buffSize;
     filled = true;
   }
