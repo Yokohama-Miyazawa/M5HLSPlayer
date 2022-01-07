@@ -3,24 +3,24 @@
 M3U8Player::M3U8Player(String url)
 {
   scrapeAACHandle = NULL;
-  setBufferHandle = NULL;
   playAACHandle = NULL;
   volume = 5.0;
   buffSize = 4096;
-  isChannelChanged = false;
+  isReferringUrls = false;
+  isChannelChanging = false;
   isPlaying = false;
   stationUrl = url;
-  urls = new HLSUrl(stationUrl);
   buff = NULL;
-  nextUrls = NULL;
   nextBuff = NULL;
+  nextUrls = NULL;
+
+  urls = new HLSUrl(stationUrl);
 
   out = new AudioOutputI2S(0, 1);
   out->SetOutputModeMono(true);
   out->SetGain(volume / 100.0);
   ts = new AudioGeneratorTS();
 
-  delay(1000);
   xTaskCreatePinnedToCore(this->scrapeAAC, "scrapeAAC", 2048 * 3, this, 0, &scrapeAACHandle, 0);
   xTaskCreatePinnedToCore(this->playAAC,   "playAAC",   2048 * 4, this, 2, &playAACHandle,   1);
 
@@ -30,24 +30,24 @@ M3U8Player::M3U8Player(String url)
 M3U8Player::M3U8Player(String url, const float &startVolume)
 {
   scrapeAACHandle = NULL;
-  setBufferHandle = NULL;
   playAACHandle = NULL;
   volume = startVolume;
   buffSize = 4096;
-  isChannelChanged = false;
+  isReferringUrls = false;
+  isChannelChanging = false;
   isPlaying = false;
   stationUrl = url;
-  urls = new HLSUrl(stationUrl);
   buff = NULL;
-  nextUrls = NULL;
   nextBuff = NULL;
+  nextUrls = NULL;
+
+  urls = new HLSUrl(stationUrl);
 
   out = new AudioOutputI2S(0, 1);
   out->SetOutputModeMono(true);
   out->SetGain(volume / 100.0);
   ts = new AudioGeneratorTS();
 
-  delay(1000);
   xTaskCreatePinnedToCore(this->scrapeAAC, "scrapeAAC", 2048 * 3, this, 0, &scrapeAACHandle, 0);
   xTaskCreatePinnedToCore(this->playAAC,   "playAAC",   2048 * 4, this, 2, &playAACHandle,   1);
 
@@ -56,7 +56,6 @@ M3U8Player::M3U8Player(String url, const float &startVolume)
 
 M3U8Player::~M3U8Player(){
   vTaskDelete(scrapeAACHandle);
-  vTaskDelete(setBufferHandle);
   vTaskDelete(playAACHandle);
   delete out;
   delete ts;
@@ -76,26 +75,29 @@ void M3U8Player::scrapeAAC(void* m3u8PlayerInstance)
       delay(100);
       continue;
     }
-    if (instance->isChannelChanged) {
+    if (instance->isChannelChanging) {
       log_e("Now channel changing...");
       lastRequested = 0;
       delay(100);
       continue;
     }
-    if (instance->buff && (millis() - lastRequested >= instance->targetDuration * KILO))
+    if ((millis() - lastRequested >= instance->targetDuration * KILO))
     {
+      instance->isReferringUrls = true;
       log_e("playAAC Stack: %d", uxTaskGetStackHighWaterMark(instance->playAACHandle));
       if(instance->urls->crawlSegmentUrl()) lastRequested = millis();
-
-      while (instance->urls->margin() && !instance->buff->isFullSourceQueue())
-      {
-        String convertedUrl = convertHTTPStoHTTP(instance->urls->next());
-        log_e("%s", convertedUrl.c_str());
-        AudioFileSourceHTTPStream *file = new AudioFileSourceHTTPStream(convertedUrl.c_str());
-        instance->buff->addSource(file);
-      }
+      instance->isReferringUrls = false;
     }
-    delay(100);
+    while (instance->buff && !instance->buff->isFullSourceQueue() && instance->urls->margin())
+    {
+      instance->isReferringUrls = true;
+      String convertedUrl = convertHTTPStoHTTP(instance->urls->next());
+      log_e("%s", convertedUrl.c_str());
+      AudioFileSourceHTTPStream *file = new AudioFileSourceHTTPStream(convertedUrl.c_str());
+      instance->isReferringUrls = false;
+      instance->buff->addSource(file);
+    }
+    delay(1);
   }
 }
 
@@ -106,7 +108,7 @@ void M3U8Player::setBuffer(HLSUrl* urlForBuff)
   log_e("Making a buffer for %s", convertedUrl.c_str());
   AudioFileSourceHTTPStream *file = new AudioFileSourceHTTPStream(convertedUrl.c_str());
   bool isTS = (convertedUrl.indexOf(".ts") >= 0) ? true : false;
-  log_e("isTS:%d", isTS);
+  log_e("isTS: %s", isTS ? "true" : "false");
   nextBuff = new AudioFileSourceHLSBuffer(file, buffSize, isTS);
   log_e("setBuffer Complete.");
 }
@@ -138,7 +140,6 @@ void M3U8Player::playAAC(void *m3u8PlayerInstance)
     }
     while (instance->ts->isRunning())
     {
-      //log_e("Check Loop");
       if (!instance->ts->loop())
       {
         instance->ts->stop();
@@ -149,7 +150,7 @@ void M3U8Player::playAAC(void *m3u8PlayerInstance)
         instance->isPlaying = false;
         goto restart;
       }
-      if (instance->isChannelChanged && instance->nextBuff && instance->nextBuff->isSetup())
+      if (instance->isChannelChanging && instance->nextBuff && instance->nextBuff->isSetup())
       {
         log_e("Change Channel");
         instance->ts->stop();
@@ -159,11 +160,12 @@ void M3U8Player::playAAC(void *m3u8PlayerInstance)
         instance->buff = instance->nextBuff;
         instance->urls = instance->nextUrls;
         instance->targetDuration = instance->urls->getTargetDuration();
+        log_e("Target Duration: %d", instance->targetDuration);
         instance->ts->reset();
         instance->ts->switchMode(instance->buff->isTS());
         instance->nextBuff = NULL;
         instance->nextUrls = NULL;
-        instance->isChannelChanged = false;
+        instance->isChannelChanging = false;
         log_e("Changing channel completed.");
         break;
       }
@@ -203,9 +205,10 @@ bool M3U8Player::changeStationURL(const String &url)
     log_i("invalid url");
     return false;
   }
+  while(isReferringUrls) delay(100);
+  isChannelChanging = true;
   nextUrls = new HLSUrl(url);
   setBuffer(nextUrls);
-  isChannelChanged = true;
   return true;
 }
 

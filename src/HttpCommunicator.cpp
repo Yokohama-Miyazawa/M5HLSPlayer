@@ -43,16 +43,22 @@ String convertHTTPStoHTTP(const String &url)
   return "";
 }
 
-String getRequest(const String &url)
+bool isCode3XX(const int &code){
+  return (code == HTTP_CODE_MOVED_PERMANENTLY || code == HTTP_CODE_FOUND || code == HTTP_CODE_SEE_OTHER ||
+          code == HTTP_CODE_TEMPORARY_REDIRECT || code == HTTP_CODE_PERMANENT_REDIRECT);
+}
+
+response getRequest(const String &url)
 {
   HTTPClient http;
-  String response;
+  response response;
   log_i("URL: %s", url.c_str());
   String encodedUrl = urlEncode(url);
   log_i("encoded URL: %s", encodedUrl.c_str());
 
   http.begin(encodedUrl.c_str());
   int httpCode = http.GET();
+  response.code = httpCode;
   if (httpCode > 0)
   {
     log_i("[HTTP] GET... code: %d", httpCode);
@@ -60,33 +66,34 @@ String getRequest(const String &url)
     {
       String payload = http.getString();
       log_d("%s", payload.c_str());
-      response = payload;
+      response.payload = payload;
     }
-    else if (httpCode == HTTP_CODE_MOVED_PERMANENTLY || httpCode == HTTP_CODE_FOUND || httpCode == HTTP_CODE_SEE_OTHER ||
-             httpCode == HTTP_CODE_TEMPORARY_REDIRECT || httpCode == HTTP_CODE_PERMANENT_REDIRECT)
+    else if (isCode3XX(httpCode))
     {
-      response = http.getLocation();
-      log_d("CODE 3XX LOCATION: %s", response.c_str());
+      response.payload = http.getLocation();
+      log_d("CODE 3XX LOCATION: %s", response.payload.c_str());
     }
     else
     {
-      response = "NO PAYLOAD";
+      response.payload = "NO PAYLOAD";
     }
   }
   else
   {
     log_i("[HTTP] GET... failed, error: %s", http.errorToString(httpCode).c_str());
-    response = "ERROR: " + http.errorToString(httpCode);
+    response.payload = "ERROR: " + http.errorToString(httpCode);
   }
 
   http.end();
   return response;
 }
 
-int parseResponse(const String &res, uint8_t &duration, Stack<String> &m3u8Urls, IndexQueue<String> &aacUrls)
+int parseResponse(const response &res, uint8_t &duration, Stack<String> &m3u8Urls, IndexQueue<String> &aacUrls)
 {
   uint8_t status = 0; // found .acc: 1, found .m3u8: 2, others: 0
-  int32_t length = res.length();
+  int httpCode = res.code;
+  String payload = res.payload;
+  int32_t length = payload.length();
   int16_t currentHead = 0;
   int16_t cr, lf;
   String currentLine, newUrl;
@@ -94,20 +101,20 @@ int parseResponse(const String &res, uint8_t &duration, Stack<String> &m3u8Urls,
   while (true)
   {
     if (currentHead >= length) return status;
-    cr = res.indexOf('\r', currentHead);
-    lf = res.indexOf('\n', currentHead);
+    cr = payload.indexOf('\r', currentHead);
+    lf = payload.indexOf('\n', currentHead);
     log_v("CURRENT HEAD: %d CR: %d LF: %d", currentHead, cr, lf);
     if (cr >= 0)
     { // CRLF
-      currentLine = res.substring(currentHead, cr);
+      currentLine = payload.substring(currentHead, cr);
     }
     else if (lf >= 0)
     { // LF
-      currentLine = res.substring(currentHead, lf);
+      currentLine = payload.substring(currentHead, lf);
     }
     else
     { // only one line
-      currentLine = res;
+      currentLine = payload;
     }
     currentHead = (lf >= 0) ? lf + 1 : length;
     log_d("CURRENT LINE: %s", currentLine.c_str());
@@ -150,8 +157,15 @@ int parseResponse(const String &res, uint8_t &duration, Stack<String> &m3u8Urls,
         uint32_t lastSlashOfM3u8 = latestM3u8Url.lastIndexOf('/');
         newUrl = latestM3u8Url.substring(0, lastSlashOfM3u8 + 1) + currentLine;
       }
-      if (!m3u8Urls.search(newUrl))
+      if (isCode3XX(httpCode))
+      {
+        m3u8Urls.pop();
         m3u8Urls.push(convertHTTPStoHTTP(newUrl));
+      }
+      else if (!m3u8Urls.search(newUrl))
+      {
+        m3u8Urls.push(convertHTTPStoHTTP(newUrl));
+      }
     }
   }
 }
