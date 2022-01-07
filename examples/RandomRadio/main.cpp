@@ -53,7 +53,7 @@ void loop() {
     if (M5.BtnA.isPressed()){
     print("station changing...");
     String newStation;
-    do{ newStation = stations[random(0, stationNumber)]; }while(newStation == player->getStationURL());
+    do{ newStation = stations[random(0, stationNumber)]; }while(newStation.equals(player->getStationURL()));
     log_i("new station url:%s\n", newStation.c_str());
     player->changeStationURL(newStation);
     delay(1000);
