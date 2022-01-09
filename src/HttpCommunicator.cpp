@@ -88,9 +88,9 @@ response getRequest(const String &url)
   return response;
 }
 
-int parseResponse(const response &res, uint8_t &duration, Stack<String> &m3u8Urls, IndexQueue<String> &aacUrls)
+enum ParseResponseStatus parseResponse(const response &res, uint8_t &duration, Stack<String> &m3u8Urls, IndexQueue<String> &aacUrls)
 {
-  uint8_t status = 0; // found .acc: 1, found .m3u8: 2, others: 0
+  ParseResponseStatus status = OTHERS;
   int httpCode = res.code;
   String payload = res.payload;
   int32_t length = payload.length();
@@ -124,8 +124,8 @@ int parseResponse(const response &res, uint8_t &duration, Stack<String> &m3u8Url
     }
     if (currentLine.indexOf(".aac") >= 0 || currentLine.indexOf(".ts") >= 0)
     {
-      if (!status)
-        status = 1;
+      if (status == OTHERS)
+        status = AAC_OR_TS;
       if (currentLine.indexOf("http") == 0)
       {
         newUrl = currentLine;
@@ -144,8 +144,8 @@ int parseResponse(const response &res, uint8_t &duration, Stack<String> &m3u8Url
     }
     else if (currentLine.indexOf(".m3u8") >= 0)
     {
-      if (!status)
-        status = 2;
+      if (status == OTHERS)
+        status = M3U8;
       if (currentLine.indexOf("http") == 0)
       {
         newUrl = currentLine;

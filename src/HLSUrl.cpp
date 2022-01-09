@@ -17,15 +17,13 @@ HLSUrl::~HLSUrl()
 void HLSUrl::searchPlaylistUrl(const String url)
 {
   response res;
-  uint8_t status;
+  enum ParseResponseStatus status;
   m3u8Urls->push(url);
   do
   {
     res = getRequest(m3u8Urls->peek());
     status = parseResponse(res, targetDuration, *m3u8Urls, *segmentUrls);
-    log_v("status: %d", status);
-    delay(100);
-  } while (status != 1);
+  } while (status != AAC_OR_TS);
   return;
 }
 
@@ -33,8 +31,8 @@ bool HLSUrl::crawlSegmentUrl()
 {
   if(!m3u8Urls->depth()) return false;
   response res = getRequest(m3u8Urls->peek());
-  uint8_t status = parseResponse(res, targetDuration, *m3u8Urls, *segmentUrls);
-  if(status != 1) return false;
+  enum ParseResponseStatus status = parseResponse(res, targetDuration, *m3u8Urls, *segmentUrls);
+  if(status != AAC_OR_TS) return false;
   return true;
 }
 
