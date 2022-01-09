@@ -67,7 +67,6 @@ class AudioGeneratorTS : public AudioGenerator
     void parsePMT(uint8_t *pat);
     int parsePES(uint8_t *pat, int posOfPacketStart, uint8_t *data);
     int parsePacket(uint8_t *packet, uint8_t *data);
-    void showBinary(uint8_t *data, int len, String comment);
     bool isSyncByteFound;
     pid_array pidsOfPMT;
     int16_t pidOfAAC;
