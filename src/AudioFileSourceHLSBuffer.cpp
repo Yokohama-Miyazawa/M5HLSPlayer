@@ -71,7 +71,6 @@ AudioFileSourceHLSBuffer::~AudioFileSourceHLSBuffer()
     AudioFileSource *src = sourceQueue->pop();
     src->close();
     delete src;
-    log_e("one source deleted");
   }
   delete sourceQueue;
 }
