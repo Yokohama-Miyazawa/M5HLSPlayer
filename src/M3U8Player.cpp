@@ -207,7 +207,8 @@ bool M3U8Player::changeStationURL(const String &url)
   }
   while(isReferringUrls) delay(100);
   isChannelChanging = true;
-  nextUrls = new HLSUrl(url);
+  stationUrl = url;
+  nextUrls = new HLSUrl(stationUrl);
   setBuffer(nextUrls);
   return true;
 }
