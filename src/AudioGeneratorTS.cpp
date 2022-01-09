@@ -312,7 +312,6 @@ bool AudioGeneratorTS::FillBufferWithValidFrame()
 
 bool AudioGeneratorTS::loop()
 {
-  //log_e("AudioGeneratorTS::loop() is called.");
   if (!running) goto done; // Nothing to do here!
 
   // If we've got data, try and pump it out...
