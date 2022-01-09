@@ -16,8 +16,6 @@ typedef struct{
   String payload;
 } response;
 
-String dToH(int decimal);
-String urlEncode(const String &url);
 String convertHTTPStoHTTP(const String &url);
 bool isCode3XX(const int &code);
 response getRequest(const String &url);

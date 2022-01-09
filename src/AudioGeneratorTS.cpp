@@ -168,11 +168,7 @@ void AudioGeneratorTS::parsePMT(uint8_t *pat)
     log_v("Stream Type: 0x%02X(%d) Elementary PID: 0x%04X(%d)",
           streamType, streamType, elementaryPID, elementaryPID);
 
-    if (streamType == 0x0F || streamType == 0x11)
-    {
-      log_v("found AAC PID");
-      pidOfAAC = elementaryPID;
-    }
+    if (streamType == 0x0F || streamType == 0x11) pidOfAAC = elementaryPID;
 
     int esInfoLength = ((pat[cursor + 3] & 0x0F) << 8) | (pat[cursor + 4] & 0xFF);
     log_v("ES Info Length: 0x%04X(%d)", esInfoLength, esInfoLength);
@@ -180,31 +176,14 @@ void AudioGeneratorTS::parsePMT(uint8_t *pat)
   }
 }
 
-void AudioGeneratorTS::showBinary(uint8_t *data, int len, String comment="Show Binary")
-{
-  if(len <= 0) return;
-  log_v("%s", comment.c_str());
-  //log_v("data[0]: %02X", data[0]);
-  log_v("len: %d", len);
-  log_v("data[0]: %02X, data[-1]: %02X", data[0], data[len-1]);
-  //log_v("%s", (comment+" Whole").c_str());
-  //for (int i = 0; i < len; i++){Serial.printf("%02X", data[i]);}
-  //log_v("\n%s", (comment+" END").c_str());
-}
-
 int AudioGeneratorTS::parsePES(uint8_t *pat, int posOfPacketStart, uint8_t *data)
 {
-  log_v("Address of pat: %d, of data %d", pat, data);
-  if(pesDataLength < 1) log_v("pesDataLength: %d", pesDataLength);
   size_t dataSize;
   if (pesDataLength > 0)
   {
-    log_v("First AAC data byte: %02X", pat[0]);
     dataSize = TS_PACKET_SIZE - posOfPacketStart;
-    log_v("dataSize: %d", dataSize);
     memcpy(data, pat, dataSize);
     pesDataLength -= dataSize;
-    log_v("pat tail: %02X, data tail: %02X", pat[dataSize - 1], data[dataSize - 1]);
     return dataSize;
   }
   else
@@ -212,7 +191,6 @@ int AudioGeneratorTS::parsePES(uint8_t *pat, int posOfPacketStart, uint8_t *data
     uint8_t firstByte  = pat[0] & 0xFF;
     uint8_t secondByte = pat[1] & 0xFF;
     uint8_t thirdByte  = pat[2] & 0xFF;
-    log_v("First 3 bytes: %02X %02X %02X", firstByte, secondByte, thirdByte);
     if (firstByte == 0x00 && secondByte == 0x00 && thirdByte == 0x01)
     {
       uint8_t streamID = pat[3] & 0xFF;
@@ -233,12 +211,9 @@ int AudioGeneratorTS::parsePES(uint8_t *pat, int posOfPacketStart, uint8_t *data
       uint8_t PESRemainingHeaderLength = pat[posOfHeaderLength] & 0xFF;
       log_v("PES Header length: %d", PESRemainingHeaderLength);
       int startOfData = posOfHeaderLength + PESRemainingHeaderLength + 1;
-      log_v("First AAC data byte: %02X", pat[startOfData]);
       dataSize = (TS_PACKET_SIZE - posOfPacketStart) - startOfData;
-      log_v("dataSize: %d", dataSize);
       memcpy(data, &pat[startOfData], dataSize);
       pesDataLength -= (TS_PACKET_SIZE - posOfPacketStart) - (posOfPacketLengthLatterHalf + 1);
-      log_v("pat tail: %02X, data tail: %02X", pat[TS_PACKET_SIZE - posOfPacketStart - 1], data[dataSize - 1]);
       return dataSize;
     }
   }
@@ -265,27 +240,19 @@ int AudioGeneratorTS::parsePacket(uint8_t *packet, uint8_t *data)
   int payloadStart = payloadUnitStartIndicator ? 5 : 4;
 
   if (pid == 0){
-    log_v("parse PAT");
     parsePAT(&packet[payloadStart]);
   } else if (pid == pidOfAAC){
-    log_v("found AAC");
     int posOfPacketStart = 4;
     if (remainingAdaptationFieldLength >= 0) posOfPacketStart = 5 + remainingAdaptationFieldLength;
     read = parsePES(&packet[posOfPacketStart], posOfPacketStart, data);
   } else if (pidsOfPMT.number){
     for (int i = 0; i < pidsOfPMT.number; i++){
       if (pid == pidsOfPMT.pids[i]){
-        log_v("found PMT");
         parsePMT(&packet[payloadStart]);
       }
     }
   }
-  showBinary(data, read, "@parsePacket");
-  if(read > 0){
-    log_v("read: %d\n", read);
-  } else {
-    log_v("PID: %d", pid);
-  }
+
   return read;
 }
 
@@ -300,9 +267,7 @@ uint32_t AudioGeneratorTS::readFile(void *data, uint32_t len)
     if(!isSyncByteFound) {
       uint8_t oneByte;
       do {
-        log_d("finding sync byte...");
         if(!file->read(&oneByte, 1)) return 0;
-        log_d("One Byte: 0x%02X", oneByte);
       } while (oneByte != 0x47);
       isSyncByteFound = true;
       read = file->read(&packetBuff[1], TS_PACKET_SIZE-1);
@@ -312,15 +277,11 @@ uint32_t AudioGeneratorTS::readFile(void *data, uint32_t len)
     if(read){ aacRead += parsePacket(packetBuff, &reinterpret_cast<uint8_t*>(data)[aacRead]); }
   } while ((len - aacRead) >= (TS_PACKET_SIZE - TS_HEADER_SIZE) && read);
 
-  showBinary(reinterpret_cast<uint8_t*>(data), aacRead, "# READFILE #");
-
-  log_v("aacRead: %d", aacRead);
   return aacRead;
 }
 
 bool AudioGeneratorTS::FillBufferWithValidFrame()
 {
-  //log_e("FillBuffer is called.");
   buff[0] = 0; // Destroy any existing sync word @ 0
   int nextSync;
   do {
@@ -330,34 +291,27 @@ bool AudioGeneratorTS::FillBufferWithValidFrame()
     if (nextSync == -1) {
       if (buffValid && buff[buffValid-1]==0xff) { // Could be 1st half of syncword, preserve it...
         buff[0] = 0xff;
-        //buffValid = file->read(buff+1, buffLen-1);
         buffValid = isInputTs ? readFile(buff+1, buffLen-1) : file->read(buff+1, buffLen-1);
-        log_v("buffValid: %d", buffValid);
         if (buffValid==0) return false; // No data available, EOF
       } else { // Try a whole new buffer
-        //buffValid = file->read(buff, buffLen-1);
         buffValid = isInputTs ? readFile(buff, buffLen-1) : file->read(buff, buffLen-1);
-        log_v("buffValid: %d", buffValid);
         if (buffValid==0) return false; // No data available, EOF
       }
     }
   } while (nextSync == -1);
-  //log_e("nextSync:%d", nextSync);
+
   // Move the frame to start at offset 0 in the buffer
   buffValid -= nextSync; // Throw out prior to nextSync
   memmove(buff, buff+nextSync, buffValid);
-  log_i("buffValid:%d", buffValid);
+
   // We have a sync word at 0 now, try and fill remainder of buffer
-  //buffValid += file->read(buff + buffValid, buffLen - buffValid);
   buffValid += isInputTs ? readFile(buff + buffValid, buffLen - buffValid) : file->read(buff + buffValid, buffLen - buffValid);
-  log_i("buffValid: %d", buffValid);
 
   return true;
 }
 
 bool AudioGeneratorTS::loop()
 {
-  //log_e("AudioGeneratorTS::loop() is called.");
   if (!running) goto done; // Nothing to do here!
 
   // If we've got data, try and pump it out...
@@ -379,10 +333,7 @@ bool AudioGeneratorTS::loop()
     // buff[0] start of frame, decode it...
     unsigned char *inBuff = reinterpret_cast<unsigned char *>(buff);
     int bytesLeft = buffValid;
-    log_v("bytesLeft: %d", bytesLeft);
-    log_v("AACDecode will be called.");
     int ret = AACDecode(hAACDecoder, &inBuff, &bytesLeft, outSample);
-    log_v("ret: %d", ret);
     if (ret) {
       // Error, skip the frame...
       char buff[48];
