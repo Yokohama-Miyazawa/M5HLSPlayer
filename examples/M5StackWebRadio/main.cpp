@@ -41,14 +41,14 @@ void setup() {
 
 void loop() {
   M5.update();
-  if (M5.BtnA.isPressed()){
+  if (M5.BtnA.wasPressed()){
     currentVolume = player->getVolume();
     if(currentVolume >= volumeStep){
       player->setVolume(currentVolume - volumeStep);
       showVolume(currentVolume - volumeStep);
     }
   }
-  if (M5.BtnC.isPressed()){
+  if (M5.BtnC.wasPressed()){
     currentVolume = player->getVolume();
     if(currentVolume <= maxVolume - volumeStep){
       player->setVolume(currentVolume + volumeStep);

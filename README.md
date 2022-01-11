@@ -4,6 +4,7 @@ Web radio player for M5Stack and M5StickC in .m3u8 format
 Support for .aac and .ts  
 
 ## Prerequisite 　
+### [M5Stack](https://github.com/m5stack/M5Stack)  
 ### [ESP8266Audio](https://github.com/earlephilhower/ESP8266Audio)  
 
 In addition, you need to add a code like the following.  

@@ -4,6 +4,7 @@ M5StackおよびM5StickCでM3U8形式のWebラジオを再生するプログラ�
 .aacと.tsに対応  
 
 ## 前提ライブラリ  
+### [M5Stack](https://github.com/m5stack/M5Stack)  
 ### [ESP8266Audio](https://github.com/earlephilhower/ESP8266Audio)  
 また、下記の通りコードを追加する必要あり。  
 
