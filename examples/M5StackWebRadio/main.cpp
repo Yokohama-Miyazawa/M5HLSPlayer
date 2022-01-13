@@ -30,7 +30,7 @@ void setup() {
   String stationUrl = "http://xxxxx/xxxxx/xxxxx.m3u8";  // Write URL of m3u8 here
   float initialVolume = 5.0;
   player = new M3U8Player(stationUrl, initialVolume);
-  delay(3000);
+  while(player->getState() == M3U8Player_State::SETUP) delay(100);
   log_i("setup completed");
   M5.Lcd.printf("setup completed\n");
   player->start();
