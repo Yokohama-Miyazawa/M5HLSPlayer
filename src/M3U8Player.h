@@ -8,6 +8,13 @@
 
 
 class M3U8Player {
+  enum State
+  {
+    SETUP,
+    PLAYING,
+    CHANNEL_CHANGING,
+    OTHERS
+  };
 public:
   M3U8Player(String url);
   M3U8Player(String url, const float &startVolume);
@@ -17,7 +24,9 @@ public:
   float getVolume();
   bool changeStationURL(const String &url);
   String getStationURL();
+  State getState();
 private:
+  enum State state;
   String stationUrl;
   float volume;
   TaskHandle_t scrapeAACHandle;
