@@ -6,15 +6,16 @@
 #include "AudioFileSourceHLSBuffer.h"
 #include "AudioGeneratorTS.h"
 
+enum class M3U8Player_State
+{
+  SETUP,
+  STANDBY,
+  PLAYING,
+  CHANNEL_CHANGING,
+  OTHERS
+};
 
 class M3U8Player {
-  enum State
-  {
-    SETUP,
-    PLAYING,
-    CHANNEL_CHANGING,
-    OTHERS
-  };
 public:
   M3U8Player(String url);
   M3U8Player(String url, const float &startVolume);
@@ -24,9 +25,9 @@ public:
   float getVolume();
   bool changeStationURL(const String &url);
   String getStationURL();
-  State getState();
+  M3U8Player_State getState();
 private:
-  enum State state;
+  M3U8Player_State state;
   String stationUrl;
   float volume;
   TaskHandle_t scrapeAACHandle;

@@ -2,7 +2,7 @@
 
 M3U8Player::M3U8Player(String url)
 {
-  state = SETUP;
+  state = M3U8Player_State::SETUP;
   scrapeAACHandle = NULL;
   playAACHandle = NULL;
   volume = 5.0;
@@ -26,11 +26,12 @@ M3U8Player::M3U8Player(String url)
   xTaskCreatePinnedToCore(this->playAAC,   "playAAC",   2048 * 4, this, 2, &playAACHandle,   1);
 
   targetDuration = urls->getTargetDuration();
+  state = M3U8Player_State::STANDBY;
 }
 
 M3U8Player::M3U8Player(String url, const float &startVolume)
 {
-  state = SETUP;
+  state = M3U8Player_State::SETUP;
   scrapeAACHandle = NULL;
   playAACHandle = NULL;
   volume = startVolume;
@@ -54,6 +55,7 @@ M3U8Player::M3U8Player(String url, const float &startVolume)
   xTaskCreatePinnedToCore(this->playAAC,   "playAAC",   2048 * 4, this, 2, &playAACHandle,   1);
 
   targetDuration = urls->getTargetDuration();
+  state = M3U8Player_State::STANDBY;
 }
 
 M3U8Player::~M3U8Player(){
@@ -65,7 +67,7 @@ M3U8Player::~M3U8Player(){
   log_d("M3U8Player destructed.");
 }
 
-M3U8Player::State M3U8Player::getState()
+M3U8Player_State M3U8Player::getState()
 {
   return state;
 }
@@ -145,13 +147,13 @@ void M3U8Player::playAAC(void *m3u8PlayerInstance)
       if(instance->urls) delete instance->urls;
       goto restart;
     } else {
-      instance->state = PLAYING;
+      instance->state = M3U8Player_State::PLAYING;
     }
     while (instance->ts->isRunning())
     {
       if (!instance->ts->loop())
       {
-        instance->state = OTHERS;
+        instance->state = M3U8Player_State::OTHERS;
         instance->ts->stop();
         instance->buff->close();
         delete instance->buff;
@@ -176,7 +178,7 @@ void M3U8Player::playAAC(void *m3u8PlayerInstance)
         instance->nextBuff = NULL;
         instance->nextUrls = NULL;
         instance->isChannelChanging = false;
-        instance->state = PLAYING;
+        instance->state = M3U8Player_State::PLAYING;
         log_e("Changing channel completed.");
         break;
       }
@@ -217,7 +219,7 @@ bool M3U8Player::changeStationURL(const String &url)
     return false;
   }
   while(isReferringUrls) delay(100);
-  state = CHANNEL_CHANGING;
+  state = M3U8Player_State::CHANNEL_CHANGING;
   isChannelChanging = true;
   stationUrl = url;
   nextUrls = new HLSUrl(stationUrl);
