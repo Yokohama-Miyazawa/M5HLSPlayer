@@ -168,13 +168,13 @@ uint32_t AudioFileSourceHLSBuffer::read(void *data, uint32_t len)
 
   uint32_t bytes = 0;
   if (!filled) {
-    log_e("Filling. length:%d availBuff:%d", length, buffSize - length);
+    log_e("Filling. writePtr:%d length:%d availBuff:%d", writePtr, length, buffSize - length);
     // Fill up completely before returning any data at all
     cb.st(STATUS_FILLING, PSTR("Refilling buffer"));
     length += src->read(buffer, buffSize - length);
     writePtr = length % buffSize;
     filled = true;
-    log_e("Filled.  length:%d availBuff:%d", length, buffSize - length);
+    log_e("Filled.  writePtr:%d length:%d availBuff:%d", writePtr, length, buffSize - length);
   }
 
   // Pull from buffer until we've got none left or we've satisfied the request
