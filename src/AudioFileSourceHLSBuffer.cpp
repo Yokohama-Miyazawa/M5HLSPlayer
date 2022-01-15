@@ -168,11 +168,13 @@ uint32_t AudioFileSourceHLSBuffer::read(void *data, uint32_t len)
 
   uint32_t bytes = 0;
   if (!filled) {
+    log_e("Filling. length:%d availBuff:%d", length, buffSize - length);
     // Fill up completely before returning any data at all
     cb.st(STATUS_FILLING, PSTR("Refilling buffer"));
     length += src->read(buffer, buffSize - length);
     writePtr = length % buffSize;
     filled = true;
+    log_e("Filled.  length:%d availBuff:%d", length, buffSize - length);
   }
 
   // Pull from buffer until we've got none left or we've satisfied the request
@@ -207,6 +209,7 @@ uint32_t AudioFileSourceHLSBuffer::read(void *data, uint32_t len)
     length = 0;
     filled = false;
     cb.st(STATUS_UNDERFLOW, PSTR("Buffer underflow"));
+    log_e("readPtr, writePtr and length are set to 0.");
   }
 
   fill();
@@ -230,7 +233,7 @@ void AudioFileSourceHLSBuffer::fill()
       int debugSize = getSize();
       int debugPos = getPos();
       if(debugPos < DEBUGPOS_THRESHOLD || (debugSize - debugPos) < DEBUGPOS_THRESHOLD || cnt > COUNT_THRESHOLD)
-        log_e("cnt:%d size:%d pos:%d bytesAvailMid:%d", cnt, debugSize, debugPos, bytesAvailMid);
+        log_e("cnt:%d size:%d pos:%d(%d%%) bytesAvailMid:%d", cnt, debugSize, debugPos, debugPos * 100 / debugSize, bytesAvailMid);
       length += cnt;
       writePtr = (writePtr + cnt) % buffSize;
       return;
@@ -244,7 +247,7 @@ void AudioFileSourceHLSBuffer::fill()
       int debugSize = getSize();
       int debugPos = getPos();
       if(debugPos < DEBUGPOS_THRESHOLD || (debugSize - debugPos) < DEBUGPOS_THRESHOLD || cnt > COUNT_THRESHOLD)
-        log_e("cnt:%d size:%d pos:%d bytesAvailEnd:%d", cnt, debugSize, debugPos, bytesAvailEnd);
+        log_e("cnt:%d size:%d pos:%d(%d%%) bytesAvailEnd:%d", cnt, debugSize, debugPos, debugPos * 100 / debugSize, bytesAvailEnd);
       length += cnt;
       writePtr = (writePtr + cnt) % buffSize;
       if (cnt != (int)bytesAvailEnd) return;
@@ -258,7 +261,7 @@ void AudioFileSourceHLSBuffer::fill()
       int debugSize = getSize();
       int debugPos = getPos();
       if(debugPos < DEBUGPOS_THRESHOLD || (debugSize - debugPos) < DEBUGPOS_THRESHOLD || cnt > COUNT_THRESHOLD)
-        log_e("cnt:%d size:%d pos:%d bytesAvailStart:%d", cnt, debugSize, debugPos, bytesAvailStart);
+        log_e("cnt:%d size:%d pos:%d(%d%%) bytesAvailStart:%d", cnt, debugSize, debugPos, debugPos * 100 / debugSize, bytesAvailStart);
       length += cnt;
       writePtr = (writePtr + cnt) % buffSize;
     }
