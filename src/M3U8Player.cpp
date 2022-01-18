@@ -1,35 +1,6 @@
 #include "M3U8Player.h"
 
-M3U8Player::M3U8Player(String url)
-{
-  state = M3U8Player_State::SETUP;
-  scrapeAACHandle = NULL;
-  playAACHandle = NULL;
-  volume = 5.0;
-  buffSize = 4096;
-  isReferringUrls = false;
-  isChannelChanging = false;
-  isPlaying = false;
-  stationUrl = url;
-  buff = NULL;
-  nextBuff = NULL;
-  nextUrls = NULL;
-
-  urls = new HLSUrl(stationUrl);
-
-  out = new AudioOutputI2S(0, 1);
-  out->SetOutputModeMono(true);
-  out->SetGain(volume / 100.0);
-  ts = new AudioGeneratorTS();
-
-  xTaskCreatePinnedToCore(this->scrapeAAC, "scrapeAAC", 2048 * 3, this, 0, &scrapeAACHandle, 0);
-  xTaskCreatePinnedToCore(this->playAAC,   "playAAC",   2048 * 4, this, 2, &playAACHandle,   1);
-
-  targetDuration = urls->getTargetDuration();
-  state = M3U8Player_State::STANDBY;
-}
-
-M3U8Player::M3U8Player(String url, const float &startVolume)
+M3U8Player::M3U8Player(String url, const float &startVolume, const bool &isAutoStart)
 {
   state = M3U8Player_State::SETUP;
   scrapeAACHandle = NULL;
@@ -51,12 +22,18 @@ M3U8Player::M3U8Player(String url, const float &startVolume)
   out->SetGain(volume / 100.0);
   ts = new AudioGeneratorTS();
 
-  xTaskCreatePinnedToCore(this->scrapeAAC, "scrapeAAC", 2048 * 3, this, 0, &scrapeAACHandle, 0);
-  xTaskCreatePinnedToCore(this->playAAC,   "playAAC",   2048 * 4, this, 2, &playAACHandle,   1);
+  xTaskCreatePinnedToCore(this->scrapeAAC, "scrapeAAC", 2048 * 2, this, 0, &scrapeAACHandle, 0);
+  xTaskCreatePinnedToCore(this->playAAC,   "playAAC",   2048 * 2, this, 2, &playAACHandle, 1);
 
   targetDuration = urls->getTargetDuration();
+  log_e("Target Duration: %d", targetDuration);
   state = M3U8Player_State::STANDBY;
+  if(isAutoStart) start();
 }
+
+M3U8Player::M3U8Player(String url) : M3U8Player(url, 5.0, false) {}
+
+M3U8Player::M3U8Player(String url, const float &startVolume) : M3U8Player(url, startVolume, false) {}
 
 M3U8Player::~M3U8Player(){
   vTaskDelete(scrapeAACHandle);

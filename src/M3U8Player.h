@@ -19,6 +19,7 @@ class M3U8Player {
 public:
   M3U8Player(String url);
   M3U8Player(String url, const float &startVolume);
+  M3U8Player(String url, const float &startVolume, const bool &isAutoStart);
   ~M3U8Player();
   bool start();
   void setVolume(const float &newVolume);
