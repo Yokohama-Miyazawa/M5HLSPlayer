@@ -257,7 +257,7 @@ void AudioFileSourceHLSBuffer::fill()
 
     if (readPtr > 1) {
       uint32_t bytesAvailStart = readPtr - 1;
-      if(bytesAvailStart >= buffSize * 0.75)
+      if (bytesAvailStart >= buffSize * 0.75)
         log_e("bytesAvailSta:%04d readPtr:%04d writePtr:%04d buffSize:%04d", bytesAvailStart, readPtr, writePtr, buffSize);
       int cnt = src->readNonBlock(&buffer[writePtr], bytesAvailStart);
       int debugSize = getSize();

@@ -40,11 +40,7 @@ void setup() {
   log_i("WiFi Connected");
 
   String stationUrl = stations[random(0, stationNumber)];
-  player = new M3U8Player(stationUrl, 100.0);
-  while(player->getState() == M3U8Player_State::SETUP) delay(100);
-  print("setup completed");
-  log_i("setup completed");
-  player->start();
+  player = new M3U8Player(stationUrl, 100.0, true);
   print("now playing");
 }
 
