@@ -9,7 +9,7 @@ M5StackおよびM5StickCでM3U8形式のWebラジオを再生するプログラ�
 また、下記の通りコードを追加する必要あり。  
 
 #### AudioFileSourceHTTPStream.cpp  
-```
+```C++
 bool AudioFileSourceHTTPStream::close()
 {
   http.end();
@@ -92,7 +92,8 @@ player->start();
 ```
 
 ### setVolume()
-#### 音量を変更する。  
+#### 説明:
+音量を変更する。  
 
 #### 構文:
 `void setVolume(const float &newVolume);`  
@@ -193,7 +194,7 @@ Serial.println(volume);
 #### 構文:
 `M3U8Player_State getState();`
 
-#### 返り値
+#### 返り値:
 `enam class M3U8Player_State`で表現された状態値。  
 取り得る値は以下の通り。  
 
@@ -205,7 +206,7 @@ Serial.println(volume);
 | CHANNEL_CHANGING | HLSプレイリストのURLを変更中 |
 | OTHERS| それ以外 |
 
-#### 使用例
+#### 使用例:
 
 ```C++
 #include <M3U8Player.h>
