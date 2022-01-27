@@ -20,6 +20,7 @@ public:
   M3U8Player(String url);
   M3U8Player(String url, const float &startVolume);
   M3U8Player(String url, const float &startVolume, const bool &isAutoStart);
+  M3U8Player(String url, const float &startVolume, const bool &isAutoStart, const uint32_t &bufferSize);
   ~M3U8Player();
   bool start();
   void setVolume(const float &newVolume);

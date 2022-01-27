@@ -1,12 +1,12 @@
 #include "M3U8Player.h"
 
-M3U8Player::M3U8Player(String url, const float &startVolume, const bool &isAutoStart)
+M3U8Player::M3U8Player(String url, const float &startVolume, const bool &isAutoStart, const uint32_t &bufferSize)
 {
   state = M3U8Player_State::SETUP;
   scrapeAACHandle = NULL;
   playAACHandle = NULL;
   volume = startVolume;
-  buffSize = 4096;
+  buffSize = bufferSize;
   isReferringUrls = false;
   isChannelChanging = false;
   isPlaying = false;
@@ -31,9 +31,11 @@ M3U8Player::M3U8Player(String url, const float &startVolume, const bool &isAutoS
   if(isAutoStart) start();
 }
 
-M3U8Player::M3U8Player(String url) : M3U8Player(url, 5.0, false) {}
+M3U8Player::M3U8Player(String url) : M3U8Player(url, 5.0, false, 4096){}
 
-M3U8Player::M3U8Player(String url, const float &startVolume) : M3U8Player(url, startVolume, false) {}
+M3U8Player::M3U8Player(String url, const float &startVolume) : M3U8Player(url, startVolume, false, 4096){}
+
+M3U8Player::M3U8Player(String url, const float &startVolume, const bool &isAutoStart) : M3U8Player(url, startVolume, isAutoStart, 4096){}
 
 M3U8Player::~M3U8Player(){
   vTaskDelete(scrapeAACHandle);
