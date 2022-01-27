@@ -102,7 +102,7 @@ void M3U8Player::scrapeAAC(void* m3u8PlayerInstance)
       if(instance->urls->crawlSegmentUrl()) lastRequested = millis();
       instance->isReferringUrls = false;
     }
-    while (instance->buff && !instance->buff->isFullSourceQueue() && instance->urls->margin())
+    while (instance->buff && instance->buff->isSetup() && !instance->buff->isFullSourceQueue() && instance->urls->margin())
     {
       instance->isReferringUrls = true;
       String convertedUrl = convertHTTPStoHTTP(instance->urls->next());
@@ -151,8 +151,9 @@ void M3U8Player::playAAC(void *m3u8PlayerInstance)
         instance->buff->close();
         delete instance->buff;
         //delete instance->urls;
-        Serial.println("End of Play");
-        instance->isPlaying = false;
+        //Serial.println("End of Play");
+        //instance->isPlaying = false;
+        Serial.println("Playback stopped.");
         goto restart;
       }
       if (instance->isChannelChanging && instance->nextBuff && instance->nextBuff->isSetup())
