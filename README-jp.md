@@ -7,7 +7,7 @@ M5StackおよびM5StickCでM3U8形式のWebラジオを再生するプログラ�
 1. [前提ライブラリ](./README-jp.md#前提ライブラリ)
 2. [使い方](./README-jp.md#使い方)
 3. [メンバ関数の説明](./README-jp.md#メンバ関数の説明)
-4. [(任意)チャンネル切り替えの高速化](./README-jp.md#(任意)チャンネル切り替えの高速化)
+4. [(任意)チャンネル切り替えの高速化](./README-jp.md#任意チャンネル切り替えの高速化)
 
 ## 前提ライブラリ  
 ### [M5Stack](https://github.com/m5stack/M5Stack)  
