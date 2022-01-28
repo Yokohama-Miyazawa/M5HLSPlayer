@@ -149,14 +149,29 @@ void M3U8Player::playAAC(void *m3u8PlayerInstance)
       if (!instance->ts->loop())
       {
         instance->state = M3U8Player_State::OTHERS;
-        instance->ts->stop();
-        instance->buff->close();
-        delete instance->buff;
-        //delete instance->urls;
-        //Serial.println("End of Play");
-        //instance->isPlaying = false;
         Serial.println("Playback stopped.");
-        goto restart;
+        int margin = instance->urls->margin();
+        if (margin >= SOURCE_QUEUE_CAPACITY) continue;
+        int rearMargin = instance->urls->rearMargin();
+        int lengthHaveToBack = SOURCE_QUEUE_CAPACITY - margin;
+        if (lengthHaveToBack <= rearMargin)
+        {
+          for (int i = 0; i < lengthHaveToBack; i++) { instance->urls->former(); }
+          continue;
+        }
+        unsigned long lastStopped = millis();
+        while (true)
+        {
+          if (millis() - lastStopped > instance->targetDuration * KILO)
+          {
+            Serial.println("Playback starting...");
+            instance->state = M3U8Player_State::PLAYING;
+            break;
+          }
+          delay(1);
+          continue;
+        }
+        continue;
       }
       if (instance->isChannelChanging && instance->nextBuff && instance->nextBuff->isSetup())
       {
