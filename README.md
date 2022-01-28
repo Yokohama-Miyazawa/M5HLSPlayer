@@ -239,3 +239,38 @@ switch(state){
     Serial.println("something error");
 }
 ```
+
+## (Option)Acceleration of the channel change  
+This is optional, but not required.  
+This will speed up the execution of channel changes.  
+
+In `HTTPClient.cpp` of `arduino-esp32`, rewrite the codes below  
+```C++
+void HTTPClient::disconnect(bool preserveClient)
+{
+    if(connected()) {
+        if(_client->available() > 0) {
+            log_d("still data in buffer (%d), clean up.\n", _client->available());
+            while(_client->available() > 0) {  // from
+                _client->read();               // remove
+            }                                  // to
+        }
+  // the rest omitted
+}
+```
+with  
+```C++
+void HTTPClient::disconnect(bool preserveClient)
+{
+    if(connected()) {
+        if(_client->available() > 0) {
+            log_d("still data in buffer (%d), clean up.\n", _client->available());
+            _client->flush();  // Add this line
+        }
+  // the rest omitted
+}
+```
+
+### References  
+1. https://github.com/espressif/arduino-esp32/issues/828
+2. https://github.com/h3ndrik/arduino-esp32/commit/1ca53494d2f983bbf60d2b9a2333ccad177e6678

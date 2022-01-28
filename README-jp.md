@@ -7,6 +7,7 @@ M5StackおよびM5StickCでM3U8形式のWebラジオを再生するプログラ�
 1. [前提ライブラリ](./README-jp.md#前提ライブラリ)
 2. [使い方](./README-jp.md#使い方)
 3. [メンバ関数の説明](./README-jp.md#メンバ関数の説明)
+4. [(任意)チャンネル切り替えの高速化](./README-jp.md#(任意)チャンネル切り替えの高速化)
 
 ## 前提ライブラリ  
 ### [M5Stack](https://github.com/m5stack/M5Stack)  
@@ -239,3 +240,38 @@ switch(state){
     Serial.println("something error");
 }
 ```
+
+## (任意)チャンネル切り替えの高速化  
+この項目に記述されている作業は必須ではない。  
+この変更により、チャンネル切り替えの処理が高速化される。  
+
+arduino-esp32のHTTPClient.cppにある下記コード  
+```C++
+void HTTPClient::disconnect(bool preserveClient)
+{
+    if(connected()) {
+        if(_client->available() > 0) {
+            log_d("still data in buffer (%d), clean up.\n", _client->available());
+            while(_client->available() > 0) {  // ここから
+                _client->read();               // 削除する
+            }                                  // ここまで
+        }
+  //後略
+}
+```
+を次のように書き換える
+```C++
+void HTTPClient::disconnect(bool preserveClient)
+{
+    if(connected()) {
+        if(_client->available() > 0) {
+            log_d("still data in buffer (%d), clean up.\n", _client->available());
+            _client->flush();  // このコードを追加する
+        }
+  //後略
+}
+```
+
+### 参考URL  
+1. https://github.com/espressif/arduino-esp32/issues/828
+2. https://github.com/h3ndrik/arduino-esp32/commit/1ca53494d2f983bbf60d2b9a2333ccad177e6678
