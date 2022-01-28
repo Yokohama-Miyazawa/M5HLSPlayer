@@ -3,6 +3,11 @@
 M5StackおよびM5StickCでM3U8形式のWebラジオを再生するプログラム   
 .aacと.tsに対応  
 
+## 目次
+1. [前提ライブラリ](./README-jp.md#前提ライブラリ)
+2. [使い方](./README-jp.md#使い方)
+3. [メンバ関数の説明](./README-jp.md#メンバ関数の説明)
+
 ## 前提ライブラリ  
 ### [M5Stack](https://github.com/m5stack/M5Stack)  
 ### [ESP8266Audio](https://github.com/earlephilhower/ESP8266Audio)  
@@ -38,6 +43,7 @@ examplesディレクトリの例を参考に、.inoファイルからこのラ�
 `M3U8Player(String url);`  
 `M3U8Player(String url, const float &startVolume);`  
 `M3U8Player(String url, const float &startVolume, const bool &isAutoStart);`  
+`M3U8Player(String url, const float &startVolume, const bool &isAutoStart, const uint32_t &bufferSize);`  
 
 #### 引数:
 | 引数 | 型 | 説明 |
@@ -45,6 +51,7 @@ examplesディレクトリの例を参考に、.inoファイルからこのラ�
 | url | String | HLSプレイリストのURL |
 | startVolume | float | 初期設定の音量(0-100, デフォルトは5) |
 | isAutoStart | bool | セットアップ後、再生開始するか否か(デフォルトは`false`) |
+| bufferSize | uint32_t | 音声データを保持するバッファのバイトサイズ(デフォルトは4096) |
 
 #### 使用例:
 例1  

@@ -3,7 +3,12 @@
 Web radio player for M5Stack and M5StickC in .m3u8 format  
 Support for .aac and .ts  
 
-## Prerequisite 　
+## Contents
+1. [Prerequisite](./README.md#prerequisite)
+2. [Usage](./README.md#usage)
+3. [Description of the Member Functions](./README.md#description-of-the-member-functions)
+
+## Prerequisite  
 ### [M5Stack](https://github.com/m5stack/M5Stack)  
 ### [ESP8266Audio](https://github.com/earlephilhower/ESP8266Audio)  
 
@@ -39,6 +44,7 @@ If `isAutoStart` is set to `false`, then you need to call `start()` explicitly.
 `M3U8Player(String url);`  
 `M3U8Player(String url, const float &startVolume);`  
 `M3U8Player(String url, const float &startVolume, const bool &isAutoStart);`  
+`M3U8Player(String url, const float &startVolume, const bool &isAutoStart, const uint32_t &bufferSize);`  
 
 #### Function argument:
 | argument | type | Description |
@@ -46,6 +52,7 @@ If `isAutoStart` is set to `false`, then you need to call `start()` explicitly.
 | url | String | URL of HLS playlist |
 | startVolume | float | volume of initial setting (0-100, default 5) |
 | isAutoStart | bool | start playback automatically or not (default `false`) |
+| bufferSize | uint32_t | byte size of a buffer for audio data (default 4096) |
 
 #### Example of use:
 example 1  
