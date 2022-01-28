@@ -7,6 +7,7 @@ Support for .aac and .ts
 1. [Prerequisite](./README.md#prerequisite)
 2. [Usage](./README.md#usage)
 3. [Description of the Member Functions](./README.md#description-of-the-member-functions)
+4. [(Option) Acceleration of the channel change](option-acceleration-of-the-channel-change)
 
 ## Prerequisite  
 ### [M5Stack](https://github.com/m5stack/M5Stack)  
@@ -240,7 +241,7 @@ switch(state){
 }
 ```
 
-## (Option)Acceleration of the channel change  
+## (Option) Acceleration of the channel change  
 This is optional, but not required.  
 This will speed up the execution of channel changes.  
 
