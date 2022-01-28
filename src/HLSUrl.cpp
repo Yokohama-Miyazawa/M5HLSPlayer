@@ -55,3 +55,13 @@ String HLSUrl::next()
 {
   return segmentUrls->next();
 }
+
+int HLSUrl::rearMargin()
+{
+  return segmentUrls->rearMargin();
+}
+
+String HLSUrl::former()
+{
+  return segmentUrls->former();
+}

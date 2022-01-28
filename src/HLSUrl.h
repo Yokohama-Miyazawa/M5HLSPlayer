@@ -7,7 +7,9 @@ public:
   ~HLSUrl();
   int length();
   int margin();
+  int rearMargin();
   String next();
+  String former();
   bool crawlSegmentUrl();
   uint8_t getTargetDuration();
 private:

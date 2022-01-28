@@ -43,6 +43,21 @@ public:
       return this->size - index + this->tail;
     }
   }
+  int rearMargin(){
+    if(index < this->head) {
+      return index + ((this->size - this->head) + 1);
+    } else {
+      return index - this->head;
+    }
+  }
+  T former(){
+    if(!rearMargin()) {
+      Serial.println("Index have already reached the head.");
+      exit(1);
+    }
+    index = index == 0 ? this->size - 1 : index - 1;
+    return this->data[index];
+  }
 protected:
   int index;
 };
