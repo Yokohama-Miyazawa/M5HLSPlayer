@@ -46,6 +46,7 @@ private:
   bool isChannelChanging;
   bool isPlaying;
   void setBuffer(HLSUrl* url);
+  bool recovery();
   void changeChannel();
   static void scrapeAAC(void *args);
   static void playAAC(void *args);

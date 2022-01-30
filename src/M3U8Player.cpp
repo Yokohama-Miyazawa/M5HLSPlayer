@@ -58,6 +58,20 @@ void M3U8Player::setBuffer(HLSUrl* urlForBuff)
   log_e("setBuffer Complete.");
 }
 
+bool M3U8Player::recovery()
+{
+  int margin = urls->margin();
+  if (margin >= SOURCE_QUEUE_CAPACITY) return true;
+  int rearMargin = urls->rearMargin();
+  int lengthHaveToBack = SOURCE_QUEUE_CAPACITY - margin;
+  if (lengthHaveToBack <= rearMargin)
+  {
+    for (int i = 0; i < lengthHaveToBack; i++) urls->former();
+    return true;
+  }
+  return urls->crawlSegmentUrl();
+}
+
 void M3U8Player::changeChannel()
 {
   log_e("Change Channel");
@@ -150,27 +164,13 @@ void M3U8Player::playAAC(void *m3u8PlayerInstance)
       {
         instance->state = M3U8Player_State::OTHERS;
         Serial.println("Playback stopped.");
-        int margin = instance->urls->margin();
-        if (margin >= SOURCE_QUEUE_CAPACITY) continue;
-        int rearMargin = instance->urls->rearMargin();
-        int lengthHaveToBack = SOURCE_QUEUE_CAPACITY - margin;
-        if (lengthHaveToBack <= rearMargin)
+        if(!instance->recovery())
         {
-          for (int i = 0; i < lengthHaveToBack; i++) { instance->urls->former(); }
-          continue;
+          unsigned long lastStopped = millis();
+          while (millis() - lastStopped < instance->targetDuration * KILO) delay(10);
         }
-        unsigned long lastStopped = millis();
-        while (true)
-        {
-          if (millis() - lastStopped > instance->targetDuration * KILO)
-          {
-            Serial.println("Playback starting...");
-            instance->state = M3U8Player_State::PLAYING;
-            break;
-          }
-          delay(1);
-          continue;
-        }
+        Serial.println("Playback starting...");
+        instance->state = M3U8Player_State::PLAYING;
         continue;
       }
       if (instance->isChannelChanging && instance->nextBuff && instance->nextBuff->isSetup())
