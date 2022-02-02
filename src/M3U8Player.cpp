@@ -76,7 +76,6 @@ void M3U8Player::changeChannel()
 {
   log_e("Change Channel");
   ts->stop();
-  buff->close();
   delete buff;
   delete urls;
   buff = nextBuff;
