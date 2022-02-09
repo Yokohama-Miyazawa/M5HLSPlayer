@@ -40,8 +40,10 @@ M3U8Player::M3U8Player(String url, const float &startVolume, const bool &isAutoS
 M3U8Player::~M3U8Player(){
   vTaskDelete(scrapeAACHandle);
   vTaskDelete(playAACHandle);
+  ts->stop();
   delete out;
   delete ts;
+  delete buff;
   delete urls;
   log_d("M3U8Player destructed.");
 }
@@ -76,7 +78,6 @@ void M3U8Player::changeChannel()
 {
   log_e("Change Channel");
   ts->stop();
-  buff->close();
   delete buff;
   delete urls;
   buff = nextBuff;
