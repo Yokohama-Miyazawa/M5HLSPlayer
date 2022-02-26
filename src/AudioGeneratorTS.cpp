@@ -139,14 +139,13 @@ void AudioGeneratorTS::parsePAT(uint8_t *pat)
   int lengthOfPATValue = 4;
   int sectionLength = ((pat[1] & 0x0F) << 8) | (pat[2] & 0xFF);
   log_v("Section Length: %d", sectionLength);
-  int program_number, program_map_PID;
   int indexOfPids = 0;
   for (int i = startOfProgramNums; i <= sectionLength; i += lengthOfPATValue)
   {
-    program_number = ((pat[i] & 0xFF) << 8) | (pat[i + 1] & 0xFF);
-    program_map_PID = ((pat[i + 2] & 0x1F) << 8) | (pat[i + 3] & 0xFF);
-    log_v("Program Num: 0x%04X(%d) PMT PID: 0x%04X(%d)",
-          program_number, program_number, program_map_PID, program_map_PID);
+    //int program_number = ((pat[i] & 0xFF) << 8) | (pat[i + 1] & 0xFF);
+    //log_v("Program Num: 0x%04X(%d)", program_number, program_number);
+    int program_map_PID = ((pat[i + 2] & 0x1F) << 8) | (pat[i + 3] & 0xFF);
+    log_v("PMT PID: 0x%04X(%d)", program_map_PID, program_map_PID);
     pidsOfPMT.pids[indexOfPids++] = program_map_PID;
   }
   pidsOfPMT.number = indexOfPids;
