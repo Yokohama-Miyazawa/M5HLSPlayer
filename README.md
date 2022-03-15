@@ -46,6 +46,7 @@ If `isAutoStart` is set to `false`, then you need to call `start()` explicitly.
 `M3U8Player(String url, const float &startVolume);`  
 `M3U8Player(String url, const float &startVolume, const bool &isAutoStart);`  
 `M3U8Player(String url, const float &startVolume, const bool &isAutoStart, const uint32_t &bufferSize);`  
+`M3U8Player(String url, const float &startVolume, const bool &isAutoStart, const uint32_t &bufferSize, const bool &isCore2);`  
 
 #### Function argument:
 | argument | type | Description |
@@ -54,6 +55,7 @@ If `isAutoStart` is set to `false`, then you need to call `start()` explicitly.
 | startVolume | float | volume of initial setting (0-100, default 5) |
 | isAutoStart | bool | start playback automatically or not (default `false`) |
 | bufferSize | uint32_t | byte size of a buffer for audio data (default 4096) |
+| isCore2 | bool | M5Stack Core2 or not (default `false`) |
 
 #### Example of use:
 example 1  
