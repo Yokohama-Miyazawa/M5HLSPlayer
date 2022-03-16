@@ -1,6 +1,6 @@
 #include "M3U8Player.h"
 
-M3U8Player::M3U8Player(String url, const float &startVolume, const bool &isAutoStart, const uint32_t &bufferSize)
+M3U8Player::M3U8Player(String url, const float &startVolume, const bool &isAutoStart, const uint32_t &bufferSize, const bool &isCore2)
 {
   state = M3U8Player_State::SETUP;
   scrapeAACHandle = NULL;
@@ -17,7 +17,12 @@ M3U8Player::M3U8Player(String url, const float &startVolume, const bool &isAutoS
 
   urls = new HLSUrl(stationUrl);
 
-  out = new AudioOutputI2S(0, 1);
+  if(isCore2) {
+    out = new AudioOutputI2S(0, 0);
+    out->SetPinout(12, 0, 2);
+  } else {
+    out = new AudioOutputI2S(0, 1);
+  }
   out->SetOutputModeMono(true);
   out->SetGain(volume / 100.0);
   ts = new AudioGeneratorTS();
@@ -31,11 +36,13 @@ M3U8Player::M3U8Player(String url, const float &startVolume, const bool &isAutoS
   if(isAutoStart) start();
 }
 
-M3U8Player::M3U8Player(String url) : M3U8Player(url, 5.0, false, 4096){}
+M3U8Player::M3U8Player(String url) : M3U8Player(url, 5.0, false, 4096, false){}
 
-M3U8Player::M3U8Player(String url, const float &startVolume) : M3U8Player(url, startVolume, false, 4096){}
+M3U8Player::M3U8Player(String url, const float &startVolume) : M3U8Player(url, startVolume, false, 4096, false){}
 
-M3U8Player::M3U8Player(String url, const float &startVolume, const bool &isAutoStart) : M3U8Player(url, startVolume, isAutoStart, 4096){}
+M3U8Player::M3U8Player(String url, const float &startVolume, const bool &isAutoStart) : M3U8Player(url, startVolume, isAutoStart, 4096, false){}
+
+M3U8Player::M3U8Player(String url, const float &startVolume, const bool &isAutoStart, const uint32_t &bufferSize) : M3U8Player(url, startVolume, isAutoStart, bufferSize, false) {}
 
 M3U8Player::~M3U8Player(){
   vTaskDelete(scrapeAACHandle);

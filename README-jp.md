@@ -45,6 +45,7 @@ examplesディレクトリの例を参考に、.inoファイルからこのラ�
 `M3U8Player(String url, const float &startVolume);`  
 `M3U8Player(String url, const float &startVolume, const bool &isAutoStart);`  
 `M3U8Player(String url, const float &startVolume, const bool &isAutoStart, const uint32_t &bufferSize);`  
+`M3U8Player(String url, const float &startVolume, const bool &isAutoStart, const uint32_t &bufferSize, const bool &isCore2);`  
 
 #### 引数:
 | 引数 | 型 | 説明 |
@@ -53,6 +54,7 @@ examplesディレクトリの例を参考に、.inoファイルからこのラ�
 | startVolume | float | 初期設定の音量(0-100, デフォルトは5) |
 | isAutoStart | bool | セットアップ後、再生開始するか否か(デフォルトは`false`) |
 | bufferSize | uint32_t | 音声データを保持するバッファのバイトサイズ(デフォルトは4096) |
+| isCore2 | bool | M5Stack Core2 か否か (デフォルトは `false`) |
 
 #### 使用例:
 例1  
