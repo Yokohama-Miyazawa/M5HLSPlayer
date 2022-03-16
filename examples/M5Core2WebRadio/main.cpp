@@ -22,6 +22,7 @@ void showVolume(const float &volume) {
 
 void setup() {
   M5.begin();
+  M5.Axp.SetSpkEnable(true);
   WiFi.mode(WIFI_STA);
   WiFi.begin(SSID, PASSWD);
   M5.Lcd.printf("WiFi Connecting...\n");
