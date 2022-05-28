@@ -17,7 +17,7 @@
   "dependencies": [
     {
       "name": "ESP8266Audio",
-      "version": "https://github.com/earlephilhower/ESP8266Audio/releases/tag/1.9.3"
+      "version": "~1.9.3"
     }
   ],
   "examples": [
