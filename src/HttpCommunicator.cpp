@@ -79,7 +79,9 @@ enum ParseResponseStatus parseResponse(const response &res, uint8_t &duration, S
     }
     else
     { // only one line
-      currentLine = payload;
+      // or
+      // final line without lf
+      currentLine = payload.substring(currentHead, length);
     }
     currentHead = (lf >= 0) ? lf + 1 : length;
     log_d("CURRENT LINE: %s", currentLine.c_str());
