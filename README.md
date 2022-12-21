@@ -214,7 +214,7 @@ Values and desrciptions are below
 
 | value | Description |
 | :---: | :---: |
-| SETUP | in the middle of setup |
+| SETUP | setup in progress |
 | STANDBY | setup completed and able to start |
 | PLAYING | currently playing back |
 | CHANNEL_CHANGING | changing the url of HLS playlist |
