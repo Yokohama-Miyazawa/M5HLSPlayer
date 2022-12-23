@@ -22,6 +22,10 @@ response getRequest(const String &url)
   response response;
   log_i("URL: %s", url.c_str());
 
+  const size_t headerKeysCount = 1;
+  const char *headerKeys[headerKeysCount] = {"Content-Encoding"};
+  http.collectHeaders(headerKeys, headerKeysCount);
+
   http.begin(url.c_str());
   int httpCode = http.GET();
   response.code = httpCode;
@@ -33,6 +37,13 @@ response getRequest(const String &url)
       String payload = http.getString();
       log_d("%s", payload.c_str());
       response.payload = payload;
+      log_i("%s", http.header("Content-Encoding").c_str());
+      if (!http.header("Content-Encoding").compareTo("gzip"))
+      {
+        log_i("GZIP");
+      } else {
+        log_i("not GZIP");
+      }
     }
     else if (isCode3XX(httpCode))
     {
