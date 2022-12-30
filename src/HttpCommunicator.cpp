@@ -34,15 +34,15 @@ response getRequest(const String &url)
     log_i("[HTTP] GET... code: %d", httpCode);
     if (httpCode == HTTP_CODE_OK)
     {
-      String payload = http.getString();
-      log_d("%s", payload.c_str());
-      response.payload = payload;
-      log_i("%s", http.header("Content-Encoding").c_str());
+      log_d("Content-Encoding: %s", http.header("Content-Encoding").c_str());
       if (!http.header("Content-Encoding").compareTo("gzip"))
       {
         log_i("GZIP");
       } else {
         log_i("not GZIP");
+        String payload = http.getString();
+        log_d("%s", payload.c_str());
+        response.payload = payload;
       }
     }
     else if (isCode3XX(httpCode))
