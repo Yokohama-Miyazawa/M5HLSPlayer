@@ -1,9 +1,11 @@
 #include <Arduino.h>
 #include <HTTPClient.h>
+#include <uzlib.h>
 #include "Stack.h"
 #include "IndexQueue.h"
 
 #define KILO 1000
+#define OUT_CHUNK_SIZE 1
 
 enum ParseResponseStatus {
   AAC_OR_TS,
