@@ -20,5 +20,6 @@ typedef struct{
 
 String convertHTTPStoHTTP(const String &url);
 bool isCode3XX(const int &code);
+String decompressGZIPStream(WiFiClient *gzipStream);
 response getRequest(const String &url);
 enum ParseResponseStatus parseResponse(const response &res, uint8_t &duration, Stack<String> &m3u8Urls, IndexQueue<String> &aacUrls);

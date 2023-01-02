@@ -16,6 +16,83 @@ bool isCode3XX(const int &code){
           code == HTTP_CODE_TEMPORARY_REDIRECT || code == HTTP_CODE_PERMANENT_REDIRECT);
 }
 
+String decompressGZIPStream(WiFiClient *gzipStream){
+  unsigned int dlen;
+  unsigned char *source, *dest;
+  int res;
+
+  uzlib_init();
+
+  const unsigned int len = gzipStream->available();
+  log_i("len: %d", len);
+  source = (unsigned char *)malloc(len);
+  const unsigned int c = gzipStream->readBytes(source, len);
+  if (c != len)
+  {
+    log_e("Error reading bytes. stream length: %d, actualy read: %d", len, c);
+    exit(1);
+  }
+
+  log_i("source[len - 4]: %d, source[len - 3]: %d, source[len - 2]: %d,  source[len - 1]: %d",
+        source[len - 4], source[len - 3], source[len - 2], source[len - 1]);
+  // 解凍後の長さを計算
+  dlen = source[len - 1];
+  dlen = 256 * dlen + source[len - 2];
+  dlen = 256 * dlen + source[len - 3];
+  dlen = 256 * dlen + source[len - 4];
+
+  const unsigned int outlen = dlen;
+  log_i("outlen: %d", outlen);
+
+  // 計算したdlenと実際の長さが異なる場合があるので、余分に長さを確保する
+  dlen++;
+  dest = (unsigned char *)malloc(dlen);
+
+  struct uzlib_uncomp d;
+  uzlib_uncompress_init(&d, NULL, 0);
+
+  d.source = source;
+  d.source_limit = source + len - 4;
+  d.source_read_cb = NULL;
+
+  res = uzlib_gzip_parse_header(&d);
+  if (res != TINF_OK)
+  {
+    log_e("Error parsing header: %d", res);
+    exit(1);
+  }
+
+  d.dest_start = d.dest = dest;
+
+  while (dlen)
+  {
+    unsigned int chunk_len = dlen < OUT_CHUNK_SIZE ? dlen : OUT_CHUNK_SIZE;
+    d.dest_limit = d.dest + chunk_len;
+    res = uzlib_uncompress_chksum(&d);
+    dlen -= chunk_len;
+    log_v("res: %d, dlen: %d", res, dlen);
+    if (res != TINF_OK)
+    {
+      break;
+    }
+  }
+
+  if (res != TINF_DONE)
+  {
+    log_e("Error during decompression: %d", res);
+    exit(-res);
+  }
+
+  log_i("decompressed %lu bytes", d.dest - dest);
+  log_d("RESULT\n%s", dest);
+  String unzipped = String((char *)dest).substring(0, outlen);
+  free(source);
+  free(dest);
+  log_d("decompressed text: %s\ndecompressed text end", unzipped.c_str());
+
+  return unzipped;
+}
+
 response getRequest(const String &url)
 {
   HTTPClient http;
@@ -38,85 +115,10 @@ response getRequest(const String &url)
       if (!http.header("Content-Encoding").compareTo("gzip"))
       {
         log_i("GZIP");
-
-        unsigned int dlen;
-        unsigned char *source, *dest;
-        int res;
-
-        uzlib_init();
-
-        WiFiClient *stream = http.getStreamPtr();
-        const unsigned int len = stream->available();
-        log_i("len: %d", len);
-        source = (unsigned char *)malloc(len);
-        const unsigned int c = stream->readBytes(source, len);
-        if (c != len)
-        {
-          log_e("Error reading bytes. stream length: %d, actualy read: %d", len, c);
-          exit(1);
-        }
-
-        log_i("source[len - 4]: %d, source[len - 3]: %d, source[len - 2]: %d,  source[len - 1]: %d",
-               source[len - 4], source[len - 3], source[len - 2], source[len - 1]);
-        // 解凍後の長さを計算
-        dlen = source[len - 1];
-        dlen = 256 * dlen + source[len - 2];
-        dlen = 256 * dlen + source[len - 3];
-        dlen = 256 * dlen + source[len - 4];
-
-        const unsigned int outlen = dlen;
-        log_i("outlen: %d", outlen);
-
-        // 計算したdlenと実際の長さが異なる場合があるので、余分に長さを確保する
-        dlen++;
-        dest = (unsigned char *)malloc(dlen);
-
-        struct uzlib_uncomp d;
-        uzlib_uncompress_init(&d, NULL, 0);
-
-        d.source = source;
-        d.source_limit = source + len - 4;
-        d.source_read_cb = NULL;
-
-        res = uzlib_gzip_parse_header(&d);
-        if (res != TINF_OK)
-        {
-          log_e("Error parsing header: %d", res);
-          exit(1);
-        }
-
-        d.dest_start = d.dest = dest;
-
-        while (dlen)
-        {
-          unsigned int chunk_len = dlen < OUT_CHUNK_SIZE ? dlen : OUT_CHUNK_SIZE;
-          d.dest_limit = d.dest + chunk_len;
-          res = uzlib_uncompress_chksum(&d);
-          dlen -= chunk_len;
-          log_i("res: %d, dlen: %d", res, dlen);
-          if (res != TINF_OK)
-          {
-            break;
-          }
-        }
-
-        if (res != TINF_DONE)
-        {
-          log_e("Error during decompression: %d", res);
-          exit(-res);
-        }
-
-        log_i("decompressed %lu bytes", d.dest - dest);
-        log_i("RESULT\n%s", dest);
-        response.payload = String((char*)dest).substring(0, outlen);
-        free(source);
-        free(dest);
-        log_i("decompressed text: %s\ndecompressed text end", response.payload.c_str());
+        response.payload = decompressGZIPStream(http.getStreamPtr());
       } else {
         log_i("not GZIP");
-        String payload = http.getString();
-        log_d("%s", payload.c_str());
-        response.payload = payload;
+        response.payload = http.getString();
       }
     }
     else if (isCode3XX(httpCode))
