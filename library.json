@@ -17,7 +17,11 @@
   "dependencies": [
     {
       "name": "ESP8266Audio",
-      "version": "~1.9.3"
+      "owner": "earlephilhower",
+      "version": "~1.9.7"
+    },
+    {
+      "name": "uzlib"
     }
   ],
   "examples": [

@@ -17,9 +17,10 @@ Support for .aac and .ts
 
 ### All M5 Controllers Common  
 [ESP8266Audio](https://github.com/earlephilhower/ESP8266Audio)  
+[uzlib](https://github.com/pfalcon/uzlib)  
 In addition, you need to add a code like the following.  
 
-#### AudioFileSourceHTTPStream.cpp  
+#### ESP8266Audio/src/AudioFileSourceHTTPStream.cpp  
 ```C++
 bool AudioFileSourceHTTPStream::close()
 {
