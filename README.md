@@ -10,9 +10,13 @@ Support for .aac and .ts
 4. [(Option) Acceleration of the channel change](./README.md#option-acceleration-of-the-channel-change)
 
 ## Prerequisite  
-### [M5Stack](https://github.com/m5stack/M5Stack)  
-### [ESP8266Audio](https://github.com/earlephilhower/ESP8266Audio)  
+### Each M5 Controller Library  
+[M5Stack](https://github.com/m5stack/M5Stack)  
+[M5StickC](https://github.com/m5stack/M5StickC)  
+[M5Core2](https://github.com/m5stack/M5Core2)  
 
+### All M5 Controllers Common  
+[ESP8266Audio](https://github.com/earlephilhower/ESP8266Audio)  
 In addition, you need to add a code like the following.  
 
 #### AudioFileSourceHTTPStream.cpp  
@@ -210,7 +214,7 @@ Values and desrciptions are below
 
 | value | Description |
 | :---: | :---: |
-| SETUP | in the middle of setup |
+| SETUP | setup in progress |
 | STANDBY | setup completed and able to start |
 | PLAYING | currently playing back |
 | CHANNEL_CHANGING | changing the url of HLS playlist |

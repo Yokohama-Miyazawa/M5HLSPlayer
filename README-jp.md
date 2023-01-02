@@ -10,8 +10,13 @@ M5StackおよびM5StickCでM3U8形式のWebラジオを再生するプログラ�
 4. [(任意)チャンネル切り替えの高速化](./README-jp.md#任意チャンネル切り替えの高速化)
 
 ## 前提ライブラリ  
-### [M5Stack](https://github.com/m5stack/M5Stack)  
-### [ESP8266Audio](https://github.com/earlephilhower/ESP8266Audio)  
+### 各M5コントローラ用ライブラリ  
+[M5Stack](https://github.com/m5stack/M5Stack)  
+[M5StickC](https://github.com/m5stack/M5StickC)  
+[M5Core2](https://github.com/m5stack/M5Core2)  
+
+### 全M5コントローラ共通  
+[ESP8266Audio](https://github.com/earlephilhower/ESP8266Audio)  
 また、下記の通りコードを追加する必要あり。  
 
 #### AudioFileSourceHTTPStream.cpp  
