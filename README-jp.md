@@ -17,9 +17,10 @@ M5StackおよびM5StickCでM3U8形式のWebラジオを再生するプログラ�
 
 ### 全M5コントローラ共通  
 [ESP8266Audio](https://github.com/earlephilhower/ESP8266Audio)  
+[uzlib](https://github.com/pfalcon/uzlib)  
 また、下記の通りコードを追加する必要あり。  
 
-#### AudioFileSourceHTTPStream.cpp  
+#### ESP8266Audio/src/AudioFileSourceHTTPStream.cpp  
 ```C++
 bool AudioFileSourceHTTPStream::close()
 {
