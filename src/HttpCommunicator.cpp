@@ -93,7 +93,7 @@ String decompressGZIPStream(WiFiClient *gzipStream){
   return unzipped;
 }
 
-response getRequest(const String &url)
+response getRequest(const String &url, const char* rootca)
 {
   HTTPClient http;
   response response;
@@ -103,7 +103,13 @@ response getRequest(const String &url)
   const char *headerKeys[headerKeysCount] = {"Content-Encoding"};
   http.collectHeaders(headerKeys, headerKeysCount);
 
-  http.begin(url.c_str());
+  if(rootca == NULL || url.indexOf("https") != 0){
+    log_i("HTTP");
+    http.begin(convertHTTPStoHTTP(url).c_str());
+  }else{
+    log_i("HTTPS");
+    http.begin(url.c_str(), rootca);
+  }
   int httpCode = http.GET();
   response.code = httpCode;
   if (httpCode > 0)
@@ -212,11 +218,11 @@ enum ParseResponseStatus parseResponse(const response &res, uint8_t &duration, S
       if (isCode3XX(httpCode))
       {
         m3u8Urls.pop();
-        m3u8Urls.push(convertHTTPStoHTTP(newUrl));
+        m3u8Urls.push(newUrl);
       }
       else if (!m3u8Urls.search(newUrl))
       {
-        m3u8Urls.push(convertHTTPStoHTTP(newUrl));
+        m3u8Urls.push(newUrl);
       }
     }
   }
