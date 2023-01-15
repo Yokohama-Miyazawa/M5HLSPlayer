@@ -1,7 +1,9 @@
 /*
   AudioFileSourceHLSBuffer
   Double-buffered file source using system RAM for http live streaming
-  
+  This program was made by modifying "AudioFileSouceBuffer.cpp" of ESP8266Audio.
+
+  Copyright (C) 2017  Earle F. Philhower, III
   Copyright (C) 2021  Osamu Miyazawa
 
   This program is free software: you can redistribute it and/or modify
