@@ -4,6 +4,7 @@
 class HLSUrl {
 public:
   HLSUrl(String url);
+  HLSUrl(String url, const char* rootca);
   ~HLSUrl();
   int length();
   int margin();
@@ -13,6 +14,7 @@ public:
   bool crawlSegmentUrl();
   uint8_t getTargetDuration();
 private:
+  const char* rca;
   uint8_t targetDuration;
   IndexQueue<String> *segmentUrls;
   Stack<String> *m3u8Urls;

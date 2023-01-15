@@ -1,12 +1,15 @@
 #include "HLSUrl.h"
 
-HLSUrl::HLSUrl(String url)
+HLSUrl::HLSUrl(String url, const char* rootca)
 {
   m3u8Urls = new Stack<String>;
   segmentUrls = new IndexQueue<String>;
   targetDuration = 10;
+  rca = rootca;
   searchPlaylistUrl(url);
 }
+
+HLSUrl::HLSUrl(String url) : HLSUrl(url, NULL){}
 
 HLSUrl::~HLSUrl()
 {
@@ -21,7 +24,7 @@ void HLSUrl::searchPlaylistUrl(const String url)
   m3u8Urls->push(url);
   do
   {
-    res = getRequest(m3u8Urls->peek());
+    res = getRequest(m3u8Urls->peek(), rca);
     status = parseResponse(res, targetDuration, *m3u8Urls, *segmentUrls);
   } while (status != AAC_OR_TS);
   return;
@@ -30,7 +33,7 @@ void HLSUrl::searchPlaylistUrl(const String url)
 bool HLSUrl::crawlSegmentUrl()
 {
   if(!m3u8Urls->depth()) return false;
-  response res = getRequest(m3u8Urls->peek());
+  response res = getRequest(m3u8Urls->peek(), rca);
   enum ParseResponseStatus status = parseResponse(res, targetDuration, *m3u8Urls, *segmentUrls);
   if(status != AAC_OR_TS) return false;
   return true;
