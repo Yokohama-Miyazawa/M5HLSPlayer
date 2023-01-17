@@ -1,3 +1,22 @@
+/*
+  HttpCommunicator
+  Program for HTTP requests and parsing the responses
+  Copyright (C) 2021  Osamu Miyazawa
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 #include "HttpCommunicator.h"
 
 String convertHTTPStoHTTP(const String &url)
@@ -110,12 +129,12 @@ response getRequest(const String &url, const char* rootca)
     log_i("HTTPS");
     http.begin(url.c_str(), rootca);
   }
-  int httpCode = http.GET();
-  response.code = httpCode;
-  if (httpCode > 0)
+  http.begin(url.c_str());
+  response.code = http.GET();
+  if (response.code > 0)
   {
-    log_i("[HTTP] GET... code: %d", httpCode);
-    if (httpCode == HTTP_CODE_OK)
+    log_i("CODE: %d", response.code);
+    if (response.code == HTTP_CODE_OK)
     {
       log_d("Content-Encoding: %s", http.header("Content-Encoding").c_str());
       if (!http.header("Content-Encoding").compareTo("gzip"))
@@ -127,7 +146,7 @@ response getRequest(const String &url, const char* rootca)
         response.payload = http.getString();
       }
     }
-    else if (isCode3XX(httpCode))
+    else if (isCode3XX(response.code))
     {
       response.payload = http.getLocation();
       log_d("CODE 3XX LOCATION: %s", response.payload.c_str());
@@ -139,8 +158,8 @@ response getRequest(const String &url, const char* rootca)
   }
   else
   {
-    log_i("[HTTP] GET... failed, error: %s", http.errorToString(httpCode).c_str());
-    response.payload = "ERROR: " + http.errorToString(httpCode);
+    log_e("ERROR: %s", http.errorToString(response.code).c_str());
+    response.payload = "ERROR: " + http.errorToString(response.code);
   }
 
   http.end();
@@ -150,7 +169,7 @@ response getRequest(const String &url, const char* rootca)
 enum ParseResponseStatus parseResponse(const response &res, uint8_t &duration, Stack<String> &m3u8Urls, IndexQueue<String> &aacUrls)
 {
   ParseResponseStatus status = OTHERS;
-  int httpCode = res.code;
+  const int httpCode = res.code;
   String payload = res.payload;
   int32_t length = payload.length();
   int16_t currentHead = 0;
