@@ -104,12 +104,11 @@ response getRequest(const String &url)
   http.collectHeaders(headerKeys, headerKeysCount);
 
   http.begin(url.c_str());
-  int httpCode = http.GET();
-  response.code = httpCode;
-  if (httpCode > 0)
+  response.code = http.GET();
+  if (response.code > 0)
   {
-    log_i("[HTTP] GET... code: %d", httpCode);
-    if (httpCode == HTTP_CODE_OK)
+    log_i("CODE: %d", response.code);
+    if (response.code == HTTP_CODE_OK)
     {
       log_d("Content-Encoding: %s", http.header("Content-Encoding").c_str());
       if (!http.header("Content-Encoding").compareTo("gzip"))
@@ -121,7 +120,7 @@ response getRequest(const String &url)
         response.payload = http.getString();
       }
     }
-    else if (isCode3XX(httpCode))
+    else if (isCode3XX(response.code))
     {
       response.payload = http.getLocation();
       log_d("CODE 3XX LOCATION: %s", response.payload.c_str());
@@ -133,8 +132,8 @@ response getRequest(const String &url)
   }
   else
   {
-    log_i("[HTTP] GET... failed, error: %s", http.errorToString(httpCode).c_str());
-    response.payload = "ERROR: " + http.errorToString(httpCode);
+    log_e("ERROR: %s", http.errorToString(response.code).c_str());
+    response.payload = "ERROR: " + http.errorToString(response.code);
   }
 
   http.end();
@@ -144,7 +143,7 @@ response getRequest(const String &url)
 enum ParseResponseStatus parseResponse(const response &res, uint8_t &duration, Stack<String> &m3u8Urls, IndexQueue<String> &aacUrls)
 {
   ParseResponseStatus status = OTHERS;
-  int httpCode = res.code;
+  const int httpCode = res.code;
   String payload = res.payload;
   int32_t length = payload.length();
   int16_t currentHead = 0;
