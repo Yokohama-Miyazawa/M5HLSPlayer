@@ -1,6 +1,6 @@
 {
   "name": "M5HLSPlayer",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Web radio player for M5 in HTTP Live Streaming. Support .m3u8 (.aac and .ts).",
   "keywords": "m5, m5stack, m5stickc, m5core2, esp32, hls, m3u, m3u8, aac, ts, mpeg2, mpeg2-ts",
   "repository": {
