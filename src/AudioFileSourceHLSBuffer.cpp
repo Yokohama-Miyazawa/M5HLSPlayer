@@ -69,7 +69,6 @@ AudioFileSourceHLSBuffer::~AudioFileSourceHLSBuffer()
   buffer = NULL;
   while(sourceQueue->length()){
     AudioFileSource *src = sourceQueue->pop();
-    src->close();
     delete src;
   }
   delete sourceQueue;
@@ -154,7 +153,6 @@ bool AudioFileSourceHLSBuffer::changeSource()
   } else{
     AudioFileSource *oldSrc = src;
     src = sourceQueue->pop();
-    oldSrc->close();
     delete oldSrc;
   }
   log_e("Source Changed. size:%d queue length:%d", src->getSize(), sourceQueue->length());
