@@ -53,6 +53,7 @@ AudioGeneratorTS::AudioGeneratorTS()
   lastRate = 0;
   lastChannels = 0;
 
+  convertor = TSConvertor();
   isInputTs = true;
   isSyncByteFound = false;
   pidsOfPMT.number = 0;
@@ -92,6 +93,7 @@ AudioGeneratorTS::AudioGeneratorTS(void *preallocateData, int preallocateSz)
   lastRate = 0;
   lastChannels = 0;
 
+  convertor = TSConvertor();
   isInputTs = true;
   isSyncByteFound = false;
   pidsOfPMT.number = 0;
@@ -129,6 +131,7 @@ void AudioGeneratorTS::switchMode(bool isTS)
 
 void AudioGeneratorTS::reset()
 {
+  convertor.reset();
   isSyncByteFound = false;
   pidsOfPMT.number = 0;
   pidOfAAC = -1;
@@ -292,10 +295,10 @@ bool AudioGeneratorTS::FillBufferWithValidFrame()
     if (nextSync == -1) {
       if (buffValid && buff[buffValid-1]==0xff) { // Could be 1st half of syncword, preserve it...
         buff[0] = 0xff;
-        buffValid = isInputTs ? readFile(buff+1, buffLen-1) : file->read(buff+1, buffLen-1);
+        buffValid = isInputTs ? convertor.convert(file, buff+1, buffLen-1) : file->read(buff+1, buffLen-1);
         if (buffValid==0) return false; // No data available, EOF
       } else { // Try a whole new buffer
-        buffValid = isInputTs ? readFile(buff, buffLen-1) : file->read(buff, buffLen-1);
+        buffValid = isInputTs ? convertor.convert(file, buff, buffLen-1) : file->read(buff, buffLen-1);
         if (buffValid==0) return false; // No data available, EOF
       }
     }

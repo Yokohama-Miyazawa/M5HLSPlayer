@@ -25,6 +25,7 @@
 
 #include "AudioGenerator.h"
 #include "libhelix-aac/aacdec.h"
+#include "TSConvertor.h"
 
 #define TS_PACKET_SIZE 188
 #define TS_HEADER_SIZE 4
@@ -63,6 +64,7 @@ class AudioGeneratorTS : public AudioGenerator
     bool FillBufferWithValidFrame(); // Read until we get a valid syncword and min(feof, 2048) butes in the buffer
 
     // Mpeg2-ts converting
+    TSConvertor convertor;
     uint8_t packetBuff[TS_PACKET_SIZE];
     uint32_t readFile(void *data, uint32_t len);
     void parsePAT(uint8_t *pat);
