@@ -309,7 +309,7 @@ bool AudioGeneratorTS::FillBufferWithValidFrame()
   memmove(buff, buff+nextSync, buffValid);
 
   // We have a sync word at 0 now, try and fill remainder of buffer
-  buffValid += isInputTs ? readFile(buff + buffValid, buffLen - buffValid) : file->read(buff + buffValid, buffLen - buffValid);
+  buffValid += isInputTs ? convertor.convert(file, buff + buffValid, buffLen - buffValid) : file->read(buff + buffValid, buffLen - buffValid);
 
   return true;
 }
