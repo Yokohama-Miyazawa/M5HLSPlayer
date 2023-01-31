@@ -140,8 +140,6 @@ void M3U8Player::scrapeAAC(void* m3u8PlayerInstance)
     if ((millis() - lastRequested >= instance->targetDuration * KILO))
     {
       instance->isReferringUrls = true;
-      log_e("playAAC   Stack: %d", uxTaskGetStackHighWaterMark(instance->playAACHandle));
-      log_e("scrapeAAC Stack: %d", uxTaskGetStackHighWaterMark(instance->scrapeAACHandle));
       if(instance->urls->crawlSegmentUrl()) lastRequested = millis();
       instance->isReferringUrls = false;
     }
