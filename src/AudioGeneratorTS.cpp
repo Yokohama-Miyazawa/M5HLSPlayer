@@ -169,6 +169,7 @@ void AudioGeneratorTS::parsePMT(uint8_t *pat)
     log_v("Stream Type: 0x%02X(%d) Elementary PID: 0x%04X(%d)",
           streamType, streamType, elementaryPID, elementaryPID);
 
+    if (streamType == 0x04) Serial.println("The type of this stream is MP3, which is not yet supported in this program.");
     if (streamType == 0x0F || streamType == 0x11) pidOfAAC = elementaryPID;
 
     int esInfoLength = ((pat[cursor + 3] & 0x0F) << 8) | (pat[cursor + 4] & 0xFF);
@@ -177,46 +178,39 @@ void AudioGeneratorTS::parsePMT(uint8_t *pat)
   }
 }
 
-int AudioGeneratorTS::parsePES(uint8_t *pat, int posOfPacketStart, uint8_t *data)
+int AudioGeneratorTS::parsePES(uint8_t *pat, const int posOfPacketStart, const bool isNewPayload, uint8_t *data)
 {
-  size_t dataSize;
-  if (pesDataLength > 0)
+  if (isNewPayload)
   {
-    dataSize = TS_PACKET_SIZE - posOfPacketStart;
-    memcpy(data, pat, dataSize);
-    pesDataLength -= dataSize;
+    uint8_t streamID = pat[3] & 0xFF;
+    if(streamID < 0xC0 || streamID > 0xDF){
+      Serial.printf("Stream ID:%02X ", streamID);
+      if(0xE0 <= streamID && streamID <= 0xEF){
+      Serial.println("This is a Stream ID for Video.");
+      }else{
+      Serial.println("Wrong Stream ID for Audio.");
+      }
+      exit(1);
+    }
+    const uint8_t posOfPacketLengthLatterHalf = 5;
+    uint16_t PESRemainingPacketLength = ((pat[4] & 0xFF) << 8) | (pat[5] & 0xFF);
+    log_v("PES Packet length: %d", PESRemainingPacketLength);
+    pesDataLength = PESRemainingPacketLength;
+    const uint8_t posOfHeaderLength = 8;
+    uint8_t PESRemainingHeaderLength = pat[posOfHeaderLength] & 0xFF;
+    log_v("PES Header length: %d", PESRemainingHeaderLength);
+    int startOfData = posOfHeaderLength + PESRemainingHeaderLength + 1;
+    const size_t dataSize = (TS_PACKET_SIZE - posOfPacketStart) - startOfData;
+    memcpy(data, &pat[startOfData], dataSize);
+    pesDataLength -= (TS_PACKET_SIZE - posOfPacketStart) - (posOfPacketLengthLatterHalf + 1);
     return dataSize;
   }
   else
   {
-    uint8_t firstByte  = pat[0] & 0xFF;
-    uint8_t secondByte = pat[1] & 0xFF;
-    uint8_t thirdByte  = pat[2] & 0xFF;
-    if (firstByte == 0x00 && secondByte == 0x00 && thirdByte == 0x01)
-    {
-      uint8_t streamID = pat[3] & 0xFF;
-      if(streamID < 0xC0 || streamID > 0xDF){
-        Serial.printf("Stream ID:%02X ", streamID);
-        if(0xE0 <= streamID && streamID <= 0xEF){
-        Serial.println("This is a Stream ID for Video.");
-        }else{
-        Serial.println("Wrong Stream ID for Audio.");
-        }
-        exit(1);
-      }
-      const uint8_t posOfPacketLengthLatterHalf = 5;
-      uint16_t PESRemainingPacketLength = ((pat[4] & 0xFF) << 8) | (pat[5] & 0xFF);
-      log_v("PES Packet length: %d", PESRemainingPacketLength);
-      pesDataLength = PESRemainingPacketLength;
-      const uint8_t posOfHeaderLength = 8;
-      uint8_t PESRemainingHeaderLength = pat[posOfHeaderLength] & 0xFF;
-      log_v("PES Header length: %d", PESRemainingHeaderLength);
-      int startOfData = posOfHeaderLength + PESRemainingHeaderLength + 1;
-      dataSize = (TS_PACKET_SIZE - posOfPacketStart) - startOfData;
-      memcpy(data, &pat[startOfData], dataSize);
-      pesDataLength -= (TS_PACKET_SIZE - posOfPacketStart) - (posOfPacketLengthLatterHalf + 1);
-      return dataSize;
-    }
+    const size_t dataSize = TS_PACKET_SIZE - posOfPacketStart;
+    memcpy(data, pat, dataSize);
+    pesDataLength -= dataSize;
+    return dataSize;
   }
   return 0;
 }
@@ -245,7 +239,7 @@ int AudioGeneratorTS::parsePacket(uint8_t *packet, uint8_t *data)
   } else if (pid == pidOfAAC){
     int posOfPacketStart = 4;
     if (remainingAdaptationFieldLength >= 0) posOfPacketStart = 5 + remainingAdaptationFieldLength;
-    read = parsePES(&packet[posOfPacketStart], posOfPacketStart, data);
+    read = parsePES(&packet[posOfPacketStart], posOfPacketStart, payloadUnitStartIndicator ? true : false, data);
   } else if (pidsOfPMT.number){
     for (int i = 0; i < pidsOfPMT.number; i++){
       if (pid == pidsOfPMT.pids[i]){
