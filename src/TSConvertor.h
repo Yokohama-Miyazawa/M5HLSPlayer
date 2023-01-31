@@ -35,6 +35,7 @@ class TSConvertor {
 public:
   TSConvertor();
   ~TSConvertor();
+  FileFormat search(AudioFileSource *source);
   uint32_t convert(AudioFileSource *source, void *data, uint32_t len);
   FileFormat getOutputFormat();
   void reset();
@@ -53,5 +54,5 @@ private:
   void parsePAT(uint8_t *pat);
   void parsePMT(uint8_t *pat);
   int parsePES(uint8_t *pat, const int posOfPacketStart, const bool isNewPayload, uint8_t *data);
-  int parsePacket(uint8_t *packet, uint8_t *data);
+  int parsePacket(uint8_t *packet, uint8_t *data, const bool isSearch=false);
 };

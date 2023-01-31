@@ -44,6 +44,26 @@ void TSConvertor::reset()
   pesDataLength = -1;
 }
 
+FileFormat TSConvertor::search(AudioFileSource *source)
+{
+  int read;
+  do {
+    if(!isSyncByteFound) {
+      uint8_t oneByte;
+      do {
+        if(!source->read(&oneByte, 1)) return FileFormat::UNKNOWN;
+      } while (oneByte != 0x47);
+      isSyncByteFound = true;
+      read = source->read(&packetBuff[1], TS_PACKET_SIZE-1);
+    } else {
+      read = source->read(packetBuff, TS_PACKET_SIZE);
+    }
+    if(read){ parsePacket(packetBuff, nullptr, true); }
+  } while (format == FileFormat::UNKNOWN);
+
+  return format;
+}
+
 uint32_t TSConvertor::convert(AudioFileSource *source, void *data, uint32_t len)
 {
   // If len is too short, return 0
@@ -156,7 +176,7 @@ int TSConvertor::parsePES(uint8_t *pat, const int posOfPacketStart, const bool i
   return 0;
 }
 
-int TSConvertor::parsePacket(uint8_t *packet, uint8_t *data)
+int TSConvertor::parsePacket(uint8_t *packet, uint8_t *data, const bool isSearch)
 {
   int read = 0;
 
@@ -177,7 +197,7 @@ int TSConvertor::parsePacket(uint8_t *packet, uint8_t *data)
 
   if (pid == 0){
     parsePAT(&packet[payloadStart]);
-  } else if (pid == pidOfAudio){
+  } else if (!isSearch && pid == pidOfAudio){
     int posOfPacketStart = 4;
     if (remainingAdaptationFieldLength >= 0) posOfPacketStart = 5 + remainingAdaptationFieldLength;
     read = parsePES(&packet[posOfPacketStart], posOfPacketStart, payloadUnitStartIndicator ? true : false, data);
