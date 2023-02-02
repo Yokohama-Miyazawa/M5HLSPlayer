@@ -23,7 +23,8 @@
 #include <AudioOutputI2S.h>
 #include "HLSUrl.h"
 #include "AudioFileSourceHLSBuffer.h"
-#include "AudioGeneratorTS.h"
+#include "AudioFileSourceTSConvertor.h"
+#include <AudioGeneratorAAC.h>
 
 enum class M3U8Player_State
 {
@@ -54,9 +55,11 @@ private:
   float volume;
   TaskHandle_t scrapeAACHandle;
   TaskHandle_t playAACHandle;
-  AudioGeneratorTS *ts;
+  AudioGeneratorAAC *ts;
   AudioFileSourceHLSBuffer* buff;
   AudioFileSourceHLSBuffer* nextBuff;
+  AudioFileSourceTSConvertor* cvtr;
+  AudioFileSourceTSConvertor* nextCvtr;
   AudioOutputI2S *out;
   uint32_t buffSize;
   uint8_t targetDuration;

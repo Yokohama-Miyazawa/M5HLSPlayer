@@ -31,7 +31,9 @@ M3U8Player::M3U8Player(String url, const float &startVolume, const bool &isAutoS
   isPlaying = false;
   stationUrl = url;
   buff = NULL;
+  cvtr = NULL;
   nextBuff = NULL;
+  nextCvtr = NULL;
   nextUrls = NULL;
 
   urls = new HLSUrl(stationUrl);
@@ -44,7 +46,7 @@ M3U8Player::M3U8Player(String url, const float &startVolume, const bool &isAutoS
   }
   out->SetOutputModeMono(true);
   out->SetGain(volume / 100.0);
-  ts = new AudioGeneratorTS();
+  ts = new AudioGeneratorAAC();
 
   xTaskCreatePinnedToCore(this->scrapeAAC, "scrapeAAC", 2048 * 2, this, 0, &scrapeAACHandle, 0);
   xTaskCreatePinnedToCore(this->playAAC,   "playAAC",   2048 * 2, this, 2, &playAACHandle, 1);
@@ -70,6 +72,7 @@ M3U8Player::~M3U8Player(){
   delete out;
   delete ts;
   delete buff;
+  delete cvtr;
   delete urls;
   log_d("M3U8Player destructed.");
 }
@@ -83,6 +86,7 @@ void M3U8Player::setBuffer(HLSUrl* urlForBuff)
   bool isTS = (convertedUrl.indexOf(".ts") >= 0) ? true : false;
   log_e("isTS: %s", isTS ? "true" : "false");
   nextBuff = new AudioFileSourceHLSBuffer(file, buffSize, isTS);
+  nextCvtr = new AudioFileSourceTSConvertor(nextBuff, isTS);
   log_e("setBuffer Complete.");
 }
 
@@ -107,12 +111,14 @@ void M3U8Player::changeChannel()
   delete buff;
   delete urls;
   buff = nextBuff;
+  cvtr = nextCvtr;
   urls = nextUrls;
   targetDuration = urls->getTargetDuration();
   log_e("Target Duration: %d", targetDuration);
-  ts->reset();
-  ts->switchMode(buff->isTS());
+  //ts->reset();
+  //ts->switchMode(buff->isTS());
   nextBuff = NULL;
+  nextCvtr = NULL;
   nextUrls = NULL;
   isChannelChanging = false;
   state = M3U8Player_State::PLAYING;
@@ -165,18 +171,21 @@ void M3U8Player::playAAC(void *m3u8PlayerInstance)
   instance->setBuffer(instance->urls);
   while (!instance->nextBuff){ delay(100); }
   instance->buff = instance->nextBuff;
-  instance->ts->reset();
-  instance->ts->switchMode(instance->buff->isTS());
+  instance->cvtr = instance->nextCvtr;
+  //instance->ts->reset();
+  //instance->ts->switchMode(instance->buff->isTS());
   instance->nextBuff = NULL;
 
   while (true)
   {
-    if (!instance->ts->begin(instance->buff, instance->out))
+    if (!instance->ts->begin(instance->cvtr, instance->out))
     {
       Serial.println("Player start failed.");
       if (instance->buff){
         instance->buff->close();
+        instance->cvtr->close();
         delete instance->buff;
+        delete instance->cvtr;
       }
       if(instance->urls) delete instance->urls;
       goto restart;
