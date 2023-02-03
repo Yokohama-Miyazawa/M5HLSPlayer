@@ -25,6 +25,7 @@
 #include "AudioFileSourceHLSBuffer.h"
 #include "AudioFileSourceTSConvertor.h"
 #include <AudioGeneratorAAC.h>
+#include <AudioGeneratorMP3.h>
 
 enum class M3U8Player_State
 {
@@ -55,7 +56,9 @@ private:
   float volume;
   TaskHandle_t scrapeAACHandle;
   TaskHandle_t playAACHandle;
-  AudioGeneratorAAC *ts;
+  AudioGenerator *ts;
+  AudioGeneratorAAC *aac;
+  AudioGeneratorMP3 *mp3;
   AudioFileSourceHLSBuffer* buff;
   AudioFileSourceHLSBuffer* nextBuff;
   AudioFileSourceTSConvertor* cvtr;

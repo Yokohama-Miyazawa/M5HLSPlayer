@@ -30,6 +30,7 @@ M3U8Player::M3U8Player(String url, const float &startVolume, const bool &isAutoS
   isChannelChanging = false;
   isPlaying = false;
   stationUrl = url;
+  ts = NULL;
   buff = NULL;
   cvtr = NULL;
   nextBuff = NULL;
@@ -46,7 +47,8 @@ M3U8Player::M3U8Player(String url, const float &startVolume, const bool &isAutoS
   }
   out->SetOutputModeMono(true);
   out->SetGain(volume / 100.0);
-  ts = new AudioGeneratorAAC();
+  aac = new AudioGeneratorAAC();
+  mp3 = new AudioGeneratorMP3();
 
   xTaskCreatePinnedToCore(this->scrapeAAC, "scrapeAAC", 2048 * 2, this, 0, &scrapeAACHandle, 0);
   xTaskCreatePinnedToCore(this->playAAC,   "playAAC",   2048 * 2, this, 2, &playAACHandle, 1);
@@ -69,8 +71,10 @@ M3U8Player::~M3U8Player(){
   vTaskDelete(scrapeAACHandle);
   vTaskDelete(playAACHandle);
   ts->stop();
+  ts = NULL;
   delete out;
-  delete ts;
+  delete aac;
+  delete mp3;
   delete buff;
   delete cvtr;
   delete urls;
@@ -83,10 +87,22 @@ void M3U8Player::setBuffer(HLSUrl* urlForBuff)
   String convertedUrl = convertHTTPStoHTTP(urlForBuff->next());
   log_e("Making a buffer for %s", convertedUrl.c_str());
   AudioFileSourceHTTPStream *file = new AudioFileSourceHTTPStream(convertedUrl.c_str());
-  bool isTS = (convertedUrl.indexOf(".ts") >= 0) ? true : false;
-  log_e("isTS: %s", isTS ? "true" : "false");
-  nextBuff = new AudioFileSourceHLSBuffer(file, buffSize, isTS);
-  nextCvtr = new AudioFileSourceTSConvertor(nextBuff, isTS);
+  SegmentFormat inputFormat;
+  if (convertedUrl.indexOf(".ts") >= 0) {
+    inputFormat = SegmentFormat::TS;
+    log_e("Segment Format: TS");
+  } else if (convertedUrl.indexOf(".aac") >= 0) {
+    inputFormat = SegmentFormat::AAC;
+    log_e("Segment Format: AAC");
+  } else if (convertedUrl.indexOf(".mp3") >= 0) {
+    inputFormat = SegmentFormat::MP3;
+    log_e("Segment Format: MP3");
+  } else {
+    inputFormat = SegmentFormat::UNKNOWN;
+    log_e("Segment Format: UNKNOWN");
+  }
+  nextBuff = new AudioFileSourceHLSBuffer(file, buffSize, inputFormat);
+  nextCvtr = new AudioFileSourceTSConvertor(nextBuff, inputFormat==SegmentFormat::TS);
   log_e("setBuffer Complete.");
 }
 
@@ -108,17 +124,40 @@ void M3U8Player::changeChannel()
 {
   log_e("Change Channel");
   ts->stop();
+  delete cvtr;
   delete buff;
   delete urls;
-  buff = nextBuff;
   cvtr = nextCvtr;
+  buff = nextBuff;
   urls = nextUrls;
   targetDuration = urls->getTargetDuration();
   log_e("Target Duration: %d", targetDuration);
-  //ts->reset();
-  //ts->switchMode(buff->isTS());
-  nextBuff = NULL;
+  switch(buff->getSegmentFormat()){
+    case SegmentFormat::AAC:
+      ts = aac;
+      break;
+    case SegmentFormat::MP3:
+      ts = mp3;
+      break;
+    default:
+      while (true) {
+        FileFormat format = cvtr->search();
+        if(format == FileFormat::AAC){
+          log_e("File Format: AAC");
+          ts = aac;
+          break;
+        }else if(format == FileFormat::MP3){
+          log_e("File Format: MP3");
+          ts = mp3;
+          break;
+        }else{
+          log_e("File Format: UNKNOWN");
+          continue;
+        }
+      }
+  }
   nextCvtr = NULL;
+  nextBuff = NULL;
   nextUrls = NULL;
   isChannelChanging = false;
   state = M3U8Player_State::PLAYING;
@@ -172,9 +211,32 @@ void M3U8Player::playAAC(void *m3u8PlayerInstance)
   while (!instance->nextBuff){ delay(100); }
   instance->buff = instance->nextBuff;
   instance->cvtr = instance->nextCvtr;
-  //instance->ts->reset();
-  //instance->ts->switchMode(instance->buff->isTS());
+  switch(instance->buff->getSegmentFormat()){
+    case SegmentFormat::AAC:
+      instance->ts = instance->aac;
+      break;
+    case SegmentFormat::MP3:
+      instance->ts = instance->mp3;
+      break;
+    default:
+      while (true) {
+        FileFormat format = instance->cvtr->search();
+        if(format == FileFormat::AAC){
+          log_e("File Format: AAC");
+          instance->ts = instance->aac;
+          break;
+        }else if(format == FileFormat::MP3){
+          log_e("File Format: MP3");
+          instance->ts = instance->mp3;
+          break;
+        }else{
+          log_e("File Format: UNKNOWN");
+          continue;
+        }
+      }
+  }
   instance->nextBuff = NULL;
+  instance->nextCvtr = NULL;
 
   while (true)
   {

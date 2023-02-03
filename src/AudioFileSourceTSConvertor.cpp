@@ -72,7 +72,7 @@ FileFormat AudioFileSourceTSConvertor::search()
       read = src->read(packetBuff, TS_PACKET_SIZE);
     }
     if(read){ parsePacket(packetBuff, nullptr, true); }
-  } while (format == FileFormat::UNKNOWN);
+  } while (pidOfAudio < 0);
 
   return format;
 }
