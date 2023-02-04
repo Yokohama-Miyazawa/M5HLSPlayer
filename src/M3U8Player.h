@@ -71,8 +71,9 @@ private:
   bool isReferringUrls;
   bool isChannelChanging;
   bool isPlaying;
-  void setBuffer(HLSUrl* url);
+  void prepareNewBufferAndNewConvertor(HLSUrl* url);
   bool recovery();
+  void shiftBufferAndConvertor();
   void changeChannel();
   static void scrapeAAC(void *args);
   static void playAAC(void *args);

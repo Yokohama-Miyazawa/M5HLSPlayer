@@ -38,6 +38,8 @@ M3U8Player::M3U8Player(String url, const float &startVolume, const bool &isAutoS
   nextUrls = NULL;
 
   urls = new HLSUrl(stationUrl);
+  targetDuration = urls->getTargetDuration();
+  log_e("Target Duration: %d", targetDuration);
 
   if(isCore2) {
     out = new AudioOutputI2S(0, 0);
@@ -53,8 +55,6 @@ M3U8Player::M3U8Player(String url, const float &startVolume, const bool &isAutoS
   xTaskCreatePinnedToCore(this->scrapeAAC, "scrapeAAC", 2048 * 2, this, 0, &scrapeAACHandle, 0);
   xTaskCreatePinnedToCore(this->playAAC,   "playAAC",   2048 * 2, this, 2, &playAACHandle, 1);
 
-  targetDuration = urls->getTargetDuration();
-  log_e("Target Duration: %d", targetDuration);
   state = M3U8Player_State::STANDBY;
   if(isAutoStart) start();
 }
@@ -81,7 +81,7 @@ M3U8Player::~M3U8Player(){
   log_d("M3U8Player destructed.");
 }
 
-void M3U8Player::setBuffer(HLSUrl* urlForBuff)
+void M3U8Player::prepareNewBufferAndNewConvertor(HLSUrl* urlForBuff)
 {
   while(!urlForBuff->margin()) delay(100);
   String convertedUrl = convertHTTPStoHTTP(urlForBuff->next());
@@ -103,7 +103,7 @@ void M3U8Player::setBuffer(HLSUrl* urlForBuff)
   }
   nextBuff = new AudioFileSourceHLSBuffer(file, buffSize, inputFormat);
   nextCvtr = new AudioFileSourceTSConvertor(nextBuff, inputFormat==SegmentFormat::TS);
-  log_e("setBuffer Complete.");
+  log_e("prepareNewBufferAndNewConvertor Complete.");
 }
 
 bool M3U8Player::recovery()
@@ -120,18 +120,10 @@ bool M3U8Player::recovery()
   return urls->crawlSegmentUrl();
 }
 
-void M3U8Player::changeChannel()
+void M3U8Player::shiftBufferAndConvertor()
 {
-  log_e("Change Channel");
-  ts->stop();
-  delete cvtr;
-  delete buff;
-  delete urls;
   cvtr = nextCvtr;
   buff = nextBuff;
-  urls = nextUrls;
-  targetDuration = urls->getTargetDuration();
-  log_e("Target Duration: %d", targetDuration);
   switch(buff->getSegmentFormat()){
     case SegmentFormat::AAC:
       ts = aac;
@@ -158,6 +150,19 @@ void M3U8Player::changeChannel()
   }
   nextCvtr = NULL;
   nextBuff = NULL;
+}
+
+void M3U8Player::changeChannel()
+{
+  log_e("Change Channel");
+  ts->stop();
+  delete cvtr;
+  delete buff;
+  delete urls;
+  urls = nextUrls;
+  targetDuration = urls->getTargetDuration();
+  log_e("Target Duration: %d", targetDuration);
+  shiftBufferAndConvertor();
   nextUrls = NULL;
   isChannelChanging = false;
   state = M3U8Player_State::PLAYING;
@@ -207,36 +212,9 @@ void M3U8Player::playAAC(void *m3u8PlayerInstance)
   while (!instance->isPlaying){ delay(1000); }
   restart:
   Serial.println("restarted or started.");
-  instance->setBuffer(instance->urls);
+  instance->prepareNewBufferAndNewConvertor(instance->urls);
   while (!instance->nextBuff){ delay(100); }
-  instance->buff = instance->nextBuff;
-  instance->cvtr = instance->nextCvtr;
-  switch(instance->buff->getSegmentFormat()){
-    case SegmentFormat::AAC:
-      instance->ts = instance->aac;
-      break;
-    case SegmentFormat::MP3:
-      instance->ts = instance->mp3;
-      break;
-    default:
-      while (true) {
-        FileFormat format = instance->cvtr->search();
-        if(format == FileFormat::AAC){
-          log_e("File Format: AAC");
-          instance->ts = instance->aac;
-          break;
-        }else if(format == FileFormat::MP3){
-          log_e("File Format: MP3");
-          instance->ts = instance->mp3;
-          break;
-        }else{
-          log_e("File Format: UNKNOWN");
-          continue;
-        }
-      }
-  }
-  instance->nextBuff = NULL;
-  instance->nextCvtr = NULL;
+  instance->shiftBufferAndConvertor();
 
   while (true)
   {
@@ -320,7 +298,7 @@ bool M3U8Player::changeStationURL(const String &url)
   isChannelChanging = true;
   stationUrl = url;
   nextUrls = new HLSUrl(stationUrl);
-  setBuffer(nextUrls);
+  prepareNewBufferAndNewConvertor(nextUrls);
   return true;
 }
 
