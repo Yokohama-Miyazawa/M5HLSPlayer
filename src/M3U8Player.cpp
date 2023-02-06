@@ -174,7 +174,6 @@ void M3U8Player::playAAC(void *m3u8PlayerInstance)
         instance->buff->close();
         delete instance->buff;
       }
-      if(instance->urls) delete instance->urls;
       goto restart;
     } else {
       instance->state = M3U8Player_State::PLAYING;
