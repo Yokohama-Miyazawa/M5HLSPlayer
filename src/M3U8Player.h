@@ -63,7 +63,6 @@ private:
   HLSUrl* urls;
   HLSUrl* nextUrls;
   bool isReferringUrls;
-  bool isChannelChanging;
   void setBuffer(HLSUrl* url);
   bool recovery();
   void changeChannel();

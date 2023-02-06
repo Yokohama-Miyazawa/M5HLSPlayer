@@ -27,7 +27,6 @@ M3U8Player::M3U8Player(String url, const float &startVolume, const bool &isAutoS
   volume = startVolume;
   buffSize = bufferSize;
   isReferringUrls = false;
-  isChannelChanging = false;
   stationUrl = url;
   buff = NULL;
   nextBuff = NULL;
@@ -116,7 +115,6 @@ void M3U8Player::changeChannel()
   ts->switchMode(buff->isTS());
   nextBuff = NULL;
   nextUrls = NULL;
-  isChannelChanging = false;
   state = M3U8Player_State::PLAYING;
   log_e("Changing channel completed.");
 }
@@ -128,7 +126,8 @@ void M3U8Player::scrapeAAC(void* m3u8PlayerInstance)
 
   while (true)
   {
-    if (instance->isChannelChanging) {
+    if (instance->state == M3U8Player_State::CHANNEL_CHANGING)
+    {
       log_e("Now channel changing...");
       lastRequested = 0;
       delay(100);
@@ -193,7 +192,7 @@ void M3U8Player::playAAC(void *m3u8PlayerInstance)
         instance->state = M3U8Player_State::PLAYING;
         continue;
       }
-      if (instance->isChannelChanging && instance->nextBuff && instance->nextBuff->isSetup())
+      if (instance->state == M3U8Player_State::CHANNEL_CHANGING && instance->nextBuff && instance->nextBuff->isSetup())
       {
         instance->changeChannel();
         break;
@@ -246,7 +245,6 @@ bool M3U8Player::changeStationURL(const String &url)
   }
   while(isReferringUrls) delay(100);
   state = M3U8Player_State::CHANNEL_CHANGING;
-  isChannelChanging = true;
   stationUrl = url;
   nextUrls = new HLSUrl(stationUrl);
   setBuffer(nextUrls);
