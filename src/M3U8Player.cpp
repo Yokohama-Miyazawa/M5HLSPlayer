@@ -28,7 +28,6 @@ M3U8Player::M3U8Player(String url, const float &startVolume, const bool &isAutoS
   buffSize = bufferSize;
   isReferringUrls = false;
   isChannelChanging = false;
-  isPlaying = false;
   stationUrl = url;
   buff = NULL;
   nextBuff = NULL;
@@ -45,12 +44,15 @@ M3U8Player::M3U8Player(String url, const float &startVolume, const bool &isAutoS
   out->SetOutputModeMono(true);
   out->SetGain(volume / 100.0);
   ts = new AudioGeneratorTS();
-
-  xTaskCreatePinnedToCore(this->scrapeAAC, "scrapeAAC", 2048 * 2, this, 0, &scrapeAACHandle, 0);
-  xTaskCreatePinnedToCore(this->playAAC,   "playAAC",   2048 * 2, this, 2, &playAACHandle, 1);
-
   targetDuration = urls->getTargetDuration();
   log_e("Target Duration: %d", targetDuration);
+
+  const BaseType_t resScrapeAAC = xTaskCreatePinnedToCore(this->scrapeAAC, "scrapeAAC", 2048 * 2, this, 0, &scrapeAACHandle, 0);
+  if(resScrapeAAC != pdPASS){
+    Serial.printf("Creating task for scrapeAAC failed. pdFREERTOS_ERRNO: %d\n", resScrapeAAC);
+    exit(1);
+  }
+
   state = M3U8Player_State::STANDBY;
   if(isAutoStart) start();
 }
@@ -126,11 +128,6 @@ void M3U8Player::scrapeAAC(void* m3u8PlayerInstance)
 
   while (true)
   {
-    if (!instance->isPlaying) {
-      log_i("Not Playing Now...");
-      delay(100);
-      continue;
-    }
     if (instance->isChannelChanging) {
       log_e("Now channel changing...");
       lastRequested = 0;
@@ -159,7 +156,6 @@ void M3U8Player::scrapeAAC(void* m3u8PlayerInstance)
 void M3U8Player::playAAC(void *m3u8PlayerInstance)
 {
   M3U8Player *instance = (M3U8Player *)m3u8PlayerInstance;
-  while (!instance->isPlaying){ delay(1000); }
   restart:
   Serial.println("restarted or started.");
   instance->setBuffer(instance->urls);
@@ -211,12 +207,17 @@ void M3U8Player::playAAC(void *m3u8PlayerInstance)
 
 bool M3U8Player::start()
 {
-  if(isPlaying) {
+  if(playAACHandle != NULL) {
     Serial.println("Already Started.");
     return false;
   }
-  isPlaying = true;
+
   Serial.println("Player Start.");
+  const BaseType_t resPlayAAC = xTaskCreatePinnedToCore(this->playAAC, "playAAC", 2048 * 2, this, 2, &playAACHandle, 1);
+  if (resPlayAAC != pdPASS) {
+    Serial.printf("Creating task for playAAC failed. pdFREERTOS_ERRNO: %d\n", resPlayAAC);
+    exit(1);
+  }
   return true;
 }
 
