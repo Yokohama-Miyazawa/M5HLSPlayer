@@ -207,7 +207,8 @@ Values and desrciptions are below
 | SETUP | setup in progress |
 | STANDBY | setup completed and able to start |
 | PLAYING | currently playing back |
-| CHANNEL_CHANGING | changing the url of HLS playlist |
+| CHANNEL_CHANGING | changing the URL of HLS playlist |
+| RECOVERY_SEGMENT | rewinding the queue of segment URLs |
 | OTHERS| the others |
 
 #### Example of use
@@ -231,6 +232,9 @@ switch(state){
     break;
   case M3U8Player_State::CHANNEL_CHANGING:
     Serial.println("ch changing");
+    break;
+  case M3U8Player_State::RECOVERY_SEGMENT:
+    Serial.println("recovery segment");
     break;
   default:
     Serial.println("something error");
