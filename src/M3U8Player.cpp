@@ -26,7 +26,6 @@ M3U8Player::M3U8Player(String url, const float &startVolume, const bool &isAutoS
   playAACHandle = NULL;
   volume = startVolume;
   buffSize = bufferSize;
-  isReferringUrls = false;
   stationUrl = url;
   buff = NULL;
   nextBuff = NULL;
@@ -104,7 +103,6 @@ bool M3U8Player::recovery()
 void M3U8Player::changeChannel()
 {
   log_e("Change Channel");
-  ts->stop();
   delete buff;
   delete urls;
   buff = nextBuff;
@@ -115,7 +113,6 @@ void M3U8Player::changeChannel()
   ts->switchMode(buff->isTS());
   nextBuff = NULL;
   nextUrls = NULL;
-  state = M3U8Player_State::PLAYING;
   log_e("Changing channel completed.");
 }
 
@@ -129,23 +126,33 @@ void M3U8Player::scrapeAAC(void* m3u8PlayerInstance)
     if (instance->state == M3U8Player_State::CHANNEL_CHANGING)
     {
       log_e("Now channel changing...");
-      lastRequested = 0;
-      delay(100);
+      instance->setBuffer(instance->nextUrls);
+      while(instance->ts->isRunning()) delay(10);
+      instance->changeChannel();
+      instance->state = M3U8Player_State::STANDBY;
+      continue;
+    }
+    if (instance->state == M3U8Player_State::RECOVERY_SEGMENT)
+    {
+      log_e("Recovery Segments...");
+      while (!instance->recovery())
+      {
+        delay(10);
+        log_e("Recovery failed. Retrying...");
+      }
+      log_e("Recovery succeeded! Playback restarting...");
+      instance->state = M3U8Player_State::STANDBY;
       continue;
     }
     if ((millis() - lastRequested >= instance->targetDuration * KILO))
     {
-      instance->isReferringUrls = true;
       if(instance->urls->crawlSegmentUrl()) lastRequested = millis();
-      instance->isReferringUrls = false;
     }
     while (instance->buff && instance->buff->isSetup() && !instance->buff->isFullSourceQueue() && instance->urls->margin())
     {
-      instance->isReferringUrls = true;
       String convertedUrl = convertHTTPStoHTTP(instance->urls->next());
       log_e("%s", convertedUrl.c_str());
       AudioFileSourceHTTPStream *file = new AudioFileSourceHTTPStream(convertedUrl.c_str());
-      instance->isReferringUrls = false;
       instance->buff->addSource(file);
     }
     delay(1);
@@ -179,22 +186,15 @@ void M3U8Player::playAAC(void *m3u8PlayerInstance)
     }
     while (instance->ts->isRunning())
     {
-      if (!instance->ts->loop())
+      if (!instance->ts->loop() || instance->state == M3U8Player_State::CHANNEL_CHANGING)
       {
-        instance->state = M3U8Player_State::OTHERS;
         Serial.println("Playback stopped.");
-        if(!instance->recovery())
-        {
-          unsigned long lastStopped = millis();
-          while (millis() - lastStopped < instance->targetDuration * KILO) delay(10);
+        instance->ts->stop();
+        if (instance->state != M3U8Player_State::CHANNEL_CHANGING) instance->state = M3U8Player_State::RECOVERY_SEGMENT;
+        while(instance->state != M3U8Player_State::STANDBY){
+          delay(100);
         }
         Serial.println("Playback starting...");
-        instance->state = M3U8Player_State::PLAYING;
-        continue;
-      }
-      if (instance->state == M3U8Player_State::CHANNEL_CHANGING && instance->nextBuff && instance->nextBuff->isSetup())
-      {
-        instance->changeChannel();
         break;
       }
       delay(1);
@@ -243,11 +243,10 @@ bool M3U8Player::changeStationURL(const String &url)
     log_i("invalid url");
     return false;
   }
-  while(isReferringUrls) delay(100);
-  state = M3U8Player_State::CHANNEL_CHANGING;
   stationUrl = url;
   nextUrls = new HLSUrl(stationUrl);
-  setBuffer(nextUrls);
+  // After created nextUrls, move to CHANNEL_CHANGING.
+  state = M3U8Player_State::CHANNEL_CHANGING;
   return true;
 }
 
