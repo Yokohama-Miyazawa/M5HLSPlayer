@@ -190,7 +190,10 @@ void M3U8Player::playAAC(void *m3u8PlayerInstance)
       {
         Serial.println("Playback stopped.");
         instance->ts->stop();
-        if (instance->state != M3U8Player_State::CHANNEL_CHANGING) instance->state = M3U8Player_State::RECOVERY_SEGMENT;
+        if (instance->state != M3U8Player_State::CHANNEL_CHANGING) {
+          instance->ts->reset();
+          instance->state = M3U8Player_State::RECOVERY_SEGMENT;
+        }
         while(instance->state != M3U8Player_State::STANDBY){
           delay(100);
         }
