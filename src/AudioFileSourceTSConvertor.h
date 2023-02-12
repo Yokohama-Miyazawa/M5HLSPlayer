@@ -43,7 +43,8 @@ class AudioFileSourceTSConvertor : public AudioFileSource
     virtual uint32_t getSize() override;
     virtual uint32_t getPos() override;
     virtual bool loop() override;
-  
+
+    void reset();
     FileFormat search();
 
   private:

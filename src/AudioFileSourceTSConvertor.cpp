@@ -57,6 +57,14 @@ uint32_t AudioFileSourceTSConvertor::getPos()
   return src->getSize();
 }
 
+void AudioFileSourceTSConvertor::reset()
+{
+  isSyncByteFound = false;
+  pidsOfPMT.number = 0;
+  pidOfAudio = -1;
+  pesDataLength = -1;
+}
+
 FileFormat AudioFileSourceTSConvertor::search()
 {
   int read;

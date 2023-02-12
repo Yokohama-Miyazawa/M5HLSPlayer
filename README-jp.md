@@ -209,6 +209,7 @@ Serial.println(volume);
 | STANDBY | セットアップ完了 |
 | PLAYING | 再生中 |
 | CHANNEL_CHANGING | HLSプレイリストのURLを変更中 |
+| RECOVERY_SEGMENT | セグメントファイルのURLキューを巻き戻し中 |
 | OTHERS| それ以外 |
 
 #### 使用例:
@@ -232,6 +233,9 @@ switch(state){
     break;
   case M3U8Player_State::CHANNEL_CHANGING:
     Serial.println("ch changing");
+    break;
+  case M3U8Player_State::RECOVERY_SEGMENT:
+    Serial.println("recovery segment");
     break;
   default:
     Serial.println("something error");
