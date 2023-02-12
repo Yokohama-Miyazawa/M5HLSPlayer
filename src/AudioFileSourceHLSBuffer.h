@@ -29,11 +29,19 @@
 #define SOURCE_QUEUE_CAPACITY 3
 #define FILE_SIZE_LIMIT 1000000  // If a source size exceed it, some problem may have occurred.
 
+enum class SegmentFormat
+{
+  TS,
+  AAC,
+  MP3,
+  UNKNOWN
+};
+
 class AudioFileSourceHLSBuffer : public AudioFileSource
 {
   public:
-    AudioFileSourceHLSBuffer(AudioFileSource *in, uint32_t bufferBytes, bool isTSData);
-    AudioFileSourceHLSBuffer(AudioFileSource *in, void *buffer, uint32_t bufferBytes, bool isTSData); // Pre-allocated buffer by app
+    AudioFileSourceHLSBuffer(AudioFileSource *in, uint32_t bufferBytes, SegmentFormat inputFormat);
+    AudioFileSourceHLSBuffer(AudioFileSource *in, void *buffer, uint32_t bufferBytes, SegmentFormat inputFormat); // Pre-allocated buffer by app
     virtual ~AudioFileSourceHLSBuffer() override;
     
     virtual uint32_t read(void *data, uint32_t len) override;
@@ -50,14 +58,15 @@ class AudioFileSourceHLSBuffer : public AudioFileSource
 
     bool isSetup();
     void addSource(AudioFileSource *src);
-    bool isTS();
     bool isFullSourceQueue();
+    SegmentFormat getSegmentFormat();
 
   private:
     virtual void fill();
     bool changeSource();
 
   private:
+    SegmentFormat format;
     AudioFileSource *src;
     Queue<AudioFileSource*> *sourceQueue;
     uint32_t buffSize;
@@ -67,7 +76,6 @@ class AudioFileSourceHLSBuffer : public AudioFileSource
     uint32_t readPtr;
     uint32_t length;
     bool filled;
-    bool isTSBuffer;
     bool isSetupCompleted = false;
 };
 

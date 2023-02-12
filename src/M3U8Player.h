@@ -23,7 +23,9 @@
 #include <AudioOutputI2S.h>
 #include "HLSUrl.h"
 #include "AudioFileSourceHLSBuffer.h"
-#include "AudioGeneratorTS.h"
+#include "AudioFileSourceTSConvertor.h"
+#include <AudioGeneratorAAC.h>
+#include <AudioGeneratorMP3.h>
 
 enum class M3U8Player_State
 {
@@ -55,16 +57,21 @@ private:
   float volume;
   TaskHandle_t scrapeAACHandle;
   TaskHandle_t playAACHandle;
-  AudioGeneratorTS *ts;
+  AudioGenerator *ts;
+  AudioGeneratorAAC *aac;
+  AudioGeneratorMP3 *mp3;
   AudioFileSourceHLSBuffer* buff;
   AudioFileSourceHLSBuffer* nextBuff;
+  AudioFileSourceTSConvertor* cvtr;
+  AudioFileSourceTSConvertor* nextCvtr;
   AudioOutputI2S *out;
   uint32_t buffSize;
   uint8_t targetDuration;
   HLSUrl* urls;
   HLSUrl* nextUrls;
-  void setBuffer(HLSUrl* url);
+  void prepareNewBufferAndNewConvertor(HLSUrl* url);
   bool recovery();
+  void shiftBufferAndConvertor();
   void changeChannel();
   static void scrapeAAC(void *args);
   static void playAAC(void *args);

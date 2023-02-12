@@ -26,7 +26,7 @@
 #pragma GCC optimize ("O3")
 
 
-AudioFileSourceHLSBuffer::AudioFileSourceHLSBuffer(AudioFileSource *source, uint32_t buffSizeBytes, bool isTSData)
+AudioFileSourceHLSBuffer::AudioFileSourceHLSBuffer(AudioFileSource *source, uint32_t buffSizeBytes, SegmentFormat inputFormat)
 {
   buffSize = buffSizeBytes;
   buffer = (uint8_t*)malloc(sizeof(uint8_t) * buffSize);
@@ -37,7 +37,7 @@ AudioFileSourceHLSBuffer::AudioFileSourceHLSBuffer(AudioFileSource *source, uint
   src = NULL;
   length = 0;
   filled = false;
-  isTSBuffer = isTSData;
+  format = inputFormat;
   sourceQueue = new Queue<AudioFileSource*>(SOURCE_QUEUE_CAPACITY);
   
   addSource(source);
@@ -45,7 +45,7 @@ AudioFileSourceHLSBuffer::AudioFileSourceHLSBuffer(AudioFileSource *source, uint
   isSetupCompleted = true;
 }
 
-AudioFileSourceHLSBuffer::AudioFileSourceHLSBuffer(AudioFileSource *source, void *inBuff, uint32_t buffSizeBytes, bool isTSData)
+AudioFileSourceHLSBuffer::AudioFileSourceHLSBuffer(AudioFileSource *source, void *inBuff, uint32_t buffSizeBytes, SegmentFormat inputFormat)
 {
   buffSize = buffSizeBytes;
   buffer = (uint8_t*)inBuff;
@@ -55,7 +55,7 @@ AudioFileSourceHLSBuffer::AudioFileSourceHLSBuffer(AudioFileSource *source, void
   src = NULL;
   length = 0;
   filled = false;
-  isTSBuffer = isTSData;
+  format = inputFormat;
   sourceQueue = new Queue<AudioFileSource*>(SOURCE_QUEUE_CAPACITY);
 
   addSource(source);
@@ -115,9 +115,9 @@ uint32_t AudioFileSourceHLSBuffer::getFillLevel()
   return length;
 }
 
-bool AudioFileSourceHLSBuffer::isTS()
+SegmentFormat AudioFileSourceHLSBuffer::getSegmentFormat()
 {
-  return isTSBuffer;
+  return format;
 }
 
 bool AudioFileSourceHLSBuffer::isSetup()
