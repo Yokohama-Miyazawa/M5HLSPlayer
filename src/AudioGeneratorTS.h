@@ -1,7 +1,9 @@
 /*
   AudioGeneratorTS
   Audio output generator using the Helix AAC decoder
-  
+  This program was made by modifying "AudioGeneratorAAC.h" of ESP8266Audio.
+
+  Copyright (C) 2017  Earle F. Philhower, III
   Copyright (C) 2021  Osamu Miyazawa
 
   This program is free software: you can redistribute it and/or modify
@@ -65,7 +67,7 @@ class AudioGeneratorTS : public AudioGenerator
     uint32_t readFile(void *data, uint32_t len);
     void parsePAT(uint8_t *pat);
     void parsePMT(uint8_t *pat);
-    int parsePES(uint8_t *pat, int posOfPacketStart, uint8_t *data);
+    int parsePES(uint8_t *pat, const int posOfPacketStart, const bool isNewPayload, uint8_t *data);
     int parsePacket(uint8_t *packet, uint8_t *data);
     bool isSyncByteFound;
     pid_array pidsOfPMT;
