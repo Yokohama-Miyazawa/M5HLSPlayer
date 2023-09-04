@@ -31,6 +31,7 @@ enum class M3U8Player_State
   STANDBY,
   PLAYING,
   CHANNEL_CHANGING,
+  RECOVERY_SEGMENT,
   OTHERS
 };
 
@@ -63,9 +64,6 @@ private:
   uint8_t targetDuration;
   HLSUrl* urls;
   HLSUrl* nextUrls;
-  bool isReferringUrls;
-  bool isChannelChanging;
-  bool isPlaying;
   const char* rca;
   void setBuffer(HLSUrl* url);
   bool recovery();

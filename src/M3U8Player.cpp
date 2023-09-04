@@ -26,9 +26,6 @@ M3U8Player::M3U8Player(String url, const float &startVolume, const bool &isAutoS
   playAACHandle = NULL;
   volume = startVolume;
   buffSize = bufferSize;
-  isReferringUrls = false;
-  isChannelChanging = false;
-  isPlaying = false;
   stationUrl = url;
   buff = NULL;
   nextBuff = NULL;
@@ -46,12 +43,15 @@ M3U8Player::M3U8Player(String url, const float &startVolume, const bool &isAutoS
   out->SetOutputModeMono(true);
   out->SetGain(volume / 100.0);
   ts = new AudioGeneratorTS();
-
-  xTaskCreatePinnedToCore(this->scrapeAAC, "scrapeAAC", 2048 * 2, this, 0, &scrapeAACHandle, 0);
-  xTaskCreatePinnedToCore(this->playAAC,   "playAAC",   2048 * 2, this, 2, &playAACHandle, 1);
-
   targetDuration = urls->getTargetDuration();
   log_e("Target Duration: %d", targetDuration);
+
+  const BaseType_t resScrapeAAC = xTaskCreatePinnedToCore(this->scrapeAAC, "scrapeAAC", 2048 * 2, this, 0, &scrapeAACHandle, 0);
+  if(resScrapeAAC != pdPASS){
+    Serial.printf("Creating task for scrapeAAC failed. pdFREERTOS_ERRNO: %d\n", resScrapeAAC);
+    exit(1);
+  }
+
   state = M3U8Player_State::STANDBY;
   if(isAutoStart) start();
 }
@@ -106,7 +106,6 @@ bool M3U8Player::recovery()
 void M3U8Player::changeChannel()
 {
   log_e("Change Channel");
-  ts->stop();
   delete buff;
   delete urls;
   buff = nextBuff;
@@ -117,8 +116,6 @@ void M3U8Player::changeChannel()
   ts->switchMode(buff->isTS());
   nextBuff = NULL;
   nextUrls = NULL;
-  isChannelChanging = false;
-  state = M3U8Player_State::PLAYING;
   log_e("Changing channel completed.");
 }
 
@@ -129,32 +126,36 @@ void M3U8Player::scrapeAAC(void* m3u8PlayerInstance)
 
   while (true)
   {
-    if (!instance->isPlaying) {
-      log_i("Not Playing Now...");
-      delay(100);
+    if (instance->state == M3U8Player_State::CHANNEL_CHANGING)
+    {
+      log_e("Now channel changing...");
+      instance->setBuffer(instance->nextUrls);
+      while(instance->ts->isRunning()) delay(10);
+      instance->changeChannel();
+      instance->state = M3U8Player_State::STANDBY;
       continue;
     }
-    if (instance->isChannelChanging) {
-      log_e("Now channel changing...");
-      lastRequested = 0;
-      delay(100);
+    if (instance->state == M3U8Player_State::RECOVERY_SEGMENT)
+    {
+      log_e("Recovery Segments...");
+      while (!instance->recovery())
+      {
+        delay(10);
+        log_e("Recovery failed. Retrying...");
+      }
+      log_e("Recovery succeeded! Playback restarting...");
+      instance->state = M3U8Player_State::STANDBY;
       continue;
     }
     if ((millis() - lastRequested >= instance->targetDuration * KILO))
     {
-      instance->isReferringUrls = true;
-      log_e("playAAC   Stack: %d", uxTaskGetStackHighWaterMark(instance->playAACHandle));
-      log_e("scrapeAAC Stack: %d", uxTaskGetStackHighWaterMark(instance->scrapeAACHandle));
       if(instance->urls->crawlSegmentUrl()) lastRequested = millis();
-      instance->isReferringUrls = false;
     }
     while (instance->buff && instance->buff->isSetup() && !instance->buff->isFullSourceQueue() && instance->urls->margin())
     {
-      instance->isReferringUrls = true;
       String convertedUrl = convertHTTPStoHTTP(instance->urls->next());
       log_e("%s", convertedUrl.c_str());
       AudioFileSourceHTTPStream *file = new AudioFileSourceHTTPStream(convertedUrl.c_str());
-      instance->isReferringUrls = false;
       instance->buff->addSource(file);
     }
     delay(1);
@@ -164,7 +165,6 @@ void M3U8Player::scrapeAAC(void* m3u8PlayerInstance)
 void M3U8Player::playAAC(void *m3u8PlayerInstance)
 {
   M3U8Player *instance = (M3U8Player *)m3u8PlayerInstance;
-  while (!instance->isPlaying){ delay(1000); }
   restart:
   Serial.println("restarted or started.");
   instance->setBuffer(instance->urls);
@@ -183,29 +183,24 @@ void M3U8Player::playAAC(void *m3u8PlayerInstance)
         instance->buff->close();
         delete instance->buff;
       }
-      if(instance->urls) delete instance->urls;
       goto restart;
     } else {
       instance->state = M3U8Player_State::PLAYING;
     }
     while (instance->ts->isRunning())
     {
-      if (!instance->ts->loop())
+      if (!instance->ts->loop() || instance->state == M3U8Player_State::CHANNEL_CHANGING)
       {
-        instance->state = M3U8Player_State::OTHERS;
         Serial.println("Playback stopped.");
-        if(!instance->recovery())
-        {
-          unsigned long lastStopped = millis();
-          while (millis() - lastStopped < instance->targetDuration * KILO) delay(10);
+        instance->ts->stop();
+        if (instance->state != M3U8Player_State::CHANNEL_CHANGING) {
+          instance->ts->reset();
+          instance->state = M3U8Player_State::RECOVERY_SEGMENT;
+        }
+        while(instance->state != M3U8Player_State::STANDBY){
+          delay(100);
         }
         Serial.println("Playback starting...");
-        instance->state = M3U8Player_State::PLAYING;
-        continue;
-      }
-      if (instance->isChannelChanging && instance->nextBuff && instance->nextBuff->isSetup())
-      {
-        instance->changeChannel();
         break;
       }
       delay(1);
@@ -216,12 +211,17 @@ void M3U8Player::playAAC(void *m3u8PlayerInstance)
 
 bool M3U8Player::start()
 {
-  if(isPlaying) {
+  if(playAACHandle != NULL) {
     Serial.println("Already Started.");
     return false;
   }
-  isPlaying = true;
+
   Serial.println("Player Start.");
+  const BaseType_t resPlayAAC = xTaskCreatePinnedToCore(this->playAAC, "playAAC", 2048 * 2, this, 2, &playAACHandle, 1);
+  if (resPlayAAC != pdPASS) {
+    Serial.printf("Creating task for playAAC failed. pdFREERTOS_ERRNO: %d\n", resPlayAAC);
+    exit(1);
+  }
   return true;
 }
 
@@ -249,12 +249,10 @@ bool M3U8Player::changeStationURL(const String &url)
     log_i("invalid url");
     return false;
   }
-  while(isReferringUrls) delay(100);
-  state = M3U8Player_State::CHANNEL_CHANGING;
-  isChannelChanging = true;
   stationUrl = url;
   nextUrls = new HLSUrl(stationUrl, rca);
-  setBuffer(nextUrls);
+  // After created nextUrls, move to CHANNEL_CHANGING.
+  state = M3U8Player_State::CHANNEL_CHANGING;
   return true;
 }
 

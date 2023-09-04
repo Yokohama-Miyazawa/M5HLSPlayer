@@ -18,17 +18,6 @@ M5StackおよびM5StickCでM3U8形式のWebラジオを再生するプログラ�
 ### 全M5コントローラ共通  
 [ESP8266Audio](https://github.com/earlephilhower/ESP8266Audio)  
 [uzlib](https://github.com/pfalcon/uzlib)  
-また、下記の通りコードを追加する必要あり。  
-
-#### ESP8266Audio/src/AudioFileSourceHTTPStream.cpp  
-```C++
-bool AudioFileSourceHTTPStream::close()
-{
-  http.end();
-  client.stop();  // このコードを追加する
-  return true;
-}
-```
 
 ## 使い方  
 ### PlatformIO  
@@ -220,6 +209,7 @@ Serial.println(volume);
 | STANDBY | セットアップ完了 |
 | PLAYING | 再生中 |
 | CHANNEL_CHANGING | HLSプレイリストのURLを変更中 |
+| RECOVERY_SEGMENT | セグメントファイルのURLキューを巻き戻し中 |
 | OTHERS| それ以外 |
 
 #### 使用例:
@@ -243,6 +233,9 @@ switch(state){
     break;
   case M3U8Player_State::CHANNEL_CHANGING:
     Serial.println("ch changing");
+    break;
+  case M3U8Player_State::RECOVERY_SEGMENT:
+    Serial.println("recovery segment");
     break;
   default:
     Serial.println("something error");
