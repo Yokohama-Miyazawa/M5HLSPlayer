@@ -168,6 +168,7 @@ enum ParseResponseStatus parseResponse(const response &res, uint8_t &duration, S
   int16_t currentHead = 0;
   int16_t cr, lf;
   String currentLine, newUrl;
+  String parentURL = "";
 
   while (true)
   {
@@ -223,9 +224,21 @@ enum ParseResponseStatus parseResponse(const response &res, uint8_t &duration, S
       else
       {
         while(!m3u8Urls.depth()){ delay(100); }
-        String latestM3u8Url = m3u8Urls.peek();
-        uint32_t lastSlashOfM3u8 = latestM3u8Url.lastIndexOf('/');
-        newUrl = latestM3u8Url.substring(0, lastSlashOfM3u8 + 1) + currentLine;
+        log_d("parentURL: %s", parentURL.c_str());
+        if (parentURL.isEmpty()) {
+          parentURL = m3u8Urls.peek();
+        }
+        log_d("parentURL: %s", parentURL.c_str());
+        uint32_t slashBetweenParentAndChild = parentURL.lastIndexOf('/');
+        String parent = parentURL.substring(0, slashBetweenParentAndChild);
+        String child = currentLine;
+        while (child.indexOf("..") == 0) {  // up path levels
+          slashBetweenParentAndChild = parent.lastIndexOf('/');
+          parent = parent.substring(0, slashBetweenParentAndChild);
+          child = child.substring(3);
+        }
+        newUrl = parent + "/" + child;
+        log_d("NEW URL: %s", newUrl.c_str());
       }
       if (isCode3XX(httpCode))
       {
