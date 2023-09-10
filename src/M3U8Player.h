@@ -19,7 +19,7 @@
 
 #include <Arduino.h>
 #include <HTTPClient.h>
-#include <AudioFileSourceHTTPStream.h>
+#include <AudioFileSourceHTTPSStream.h>
 #include <AudioOutputI2S.h>
 #include "HLSUrl.h"
 #include "AudioFileSourceHLSBuffer.h"
@@ -64,7 +64,7 @@ private:
   uint8_t targetDuration;
   HLSUrl* urls;
   HLSUrl* nextUrls;
-  const char* rca;
+  const char *rca;
   void setBuffer(HLSUrl* url);
   bool recovery();
   void changeChannel();
